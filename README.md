@@ -11,10 +11,10 @@ $ npm install --save chatgptvoicediscbot
 
 ## Features
 
-> Uses official Discord and OpenAI modules
-> Continuous conversation in the same session
-> Enabled by Voice
-> Replies by Voice
+Uses official Discord and OpenAI modules
+Continuous conversation in the same session
+Enabled by Voice
+Replies by Voice
 
 ## Usage
 
