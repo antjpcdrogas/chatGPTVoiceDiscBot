@@ -33,7 +33,8 @@ const channelId=process.env.channelId
 const guildId=process.env.guildId
 const gptModel="text-davinci-003"; // update this to use a different model. Available models: https://beta.openai.com/docs/engines
 const botTriggerWord="reply"; // bot trigger word
-const VoiceLanguage="en-EN"; // language of the bot
+const VoiceLanguage="en-EN"; // language of discord voice channel
+gTTSLanguage="en"; // language of the bot
 const volume=0.5;
 const player = createAudioPlayer();
 const client = new Client({
@@ -75,7 +76,7 @@ profanityFilter: false,
 async function saveTextFile(textToSpeak,finalName) {
     try
     {
-    var gtts = new gTTS(textToSpeak, 'pt');
+    var gtts = new gTTS(textToSpeak, gTTSLanguage);
 
     gtts.save(finalName, function (err, result) {
         if(err) { throw new Error(err) }
