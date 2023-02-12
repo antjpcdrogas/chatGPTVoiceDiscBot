@@ -1,6 +1,6 @@
 # chatgptvoicediscbot ![Prettier Code Formatting](https://img.shields.io/badge/code_style-prettier-brightgreen.svg)
 
-> Discord bot that uses chatGPT under the hood. Prompts and answers using voice with(gTTS)
+> Discord bot that uses chatGPT under the hood. Prompts and answers using voice with google text-to-speech(gTTS), OpenAI and Discord.
 > This is my first nodeJS attempt, only possible because of GitHub co-pilot.
 
 ## Installation
