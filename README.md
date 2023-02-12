@@ -15,7 +15,7 @@ $ npm install --save chatgptvoicediscbot
 - Continuous conversation in the same session
 - prompts by Voice
 - Replies by Voice
-
+- Works with multiple languages
 ## Usage
 
 ```js
