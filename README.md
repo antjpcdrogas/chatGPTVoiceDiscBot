@@ -14,6 +14,7 @@ $ npm install --save chatgptvoicediscbot
 ```js
 var chatgptvoicediscbot = require("chatgptvoicediscbot");
 chatgptvoicediscbot();
+node discordChatGPTVoiceBot.js
 ```
 
 ## Credits
