@@ -1,12 +1,13 @@
 provider "azurerm" {
   features {}
 
-#configure backend
+
 }
 
 
-resource "azurerm_storage_account" "storageAccount" {
-  name                     = "storageAccount"
+
+resource "azurerm_storage_account" "storageaccount" {
+  name                     = "storageaccount"
   resource_group_name      = azurerm_resource_group.discBotGPT.name
   location                 = azurerm_resource_group.discBotGPT.location
   account_tier             = "Standard"
@@ -19,7 +20,7 @@ resource "azurerm_storage_account" "storageAccount" {
 
 resource "azurerm_storage_container" "terraformBackend" {
   name                  = "terraformBackend"
-  storage_account_name  = azurerm_storage_account.storageAccount.name
+  storage_account_name  = azurerm_storage_account.storageaccount.name
   container_access_type = "private"
 }
 
