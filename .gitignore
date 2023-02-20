@@ -104,8 +104,7 @@ dist
 .tern-port
 
 #ignore terraform files
-*.tfstate
-*.tfstate.backup
+
 *.tfvars
 *.terraform/
-
+*.tfstate*

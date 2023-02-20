@@ -1,22 +1,51 @@
 provider "azurerm" {
   features {}
+
+#configure backend
+    backend "azurerm" {
+        resource_group_name  = "discBotGPT"
+        storage_account_name = "storageAccount"
+        container_name       = "terraformBackend"
+        key                  = "terraform.tfstate"
+    }
 }
 
-resource "azurerm_resource_group" "myResourceGroup" {
-  name     = "myResourceGroup"
+
+resource "azurerm_storage_account" "storageAccount" {
+  name                     = "storageAccount"
+  resource_group_name      = azurerm_resource_group.discBotGPT.name
+  location                 = azurerm_resource_group.discBotGPT.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+
+  tags = {
+    environment = "staging"
+  }
+}
+
+resource "azurerm_storage_container" "terraformBackend" {
+  name                  = "terraformBackend"
+  storage_account_name  = azurerm_storage_account.storageAccount.name
+  container_access_type = "private"
+}
+
+
+
+resource "azurerm_resource_group" "discBotGPT" {
+  name     = "discBotGPT"
   location = "eastus"
 }
 
 resource "azurerm_virtual_network" "myVnet" {
   name                = "myVnet"
   address_space       = ["10.0.0.0/16"]
-  location            = azurerm_resource_group.myResourceGroup.location
-  resource_group_name = azurerm_resource_group.myResourceGroup.name
+  location            = azurerm_resource_group.discBotGPT.location
+  resource_group_name = azurerm_resource_group.discBotGPT.name
 }
 
 resource "azurerm_subnet" "mySubnet" {
   name                 = "mySubnet"
-  resource_group_name  = azurerm_resource_group.myResourceGroup.name
+  resource_group_name  = azurerm_resource_group.discBotGPT.name
   virtual_network_name = azurerm_virtual_network.myVnet.name
   address_prefixes     = ["10.0.1.0/24"]
 }
@@ -26,8 +55,8 @@ resource "azurerm_subnet" "mySubnet" {
 
 resource "azurerm_network_interface" "myNic" {
   name                = "myNic"
-  location            = azurerm_resource_group.myResourceGroup.location
-  resource_group_name = azurerm_resource_group.myResourceGroup.name
+  location            = azurerm_resource_group.discBotGPT.location
+  resource_group_name = azurerm_resource_group.discBotGPT.name
 
   ip_configuration {
     name                          = "myNicConfiguration"
@@ -39,15 +68,15 @@ resource "azurerm_network_interface" "myNic" {
 
 resource "azurerm_public_ip" "myPublicIp" {
   name                = "myPublicIp"
-  location            = azurerm_resource_group.myResourceGroup.location
-  resource_group_name = azurerm_resource_group.myResourceGroup.name
+  location            = azurerm_resource_group.discBotGPT.location
+  resource_group_name = azurerm_resource_group.discBotGPT.name
   allocation_method   = "Dynamic"
 }
 
 resource "azurerm_virtual_machine" "myVM" {
   name                  = "myVM"
-  location              = azurerm_resource_group.myResourceGroup.location
-  resource_group_name   = azurerm_resource_group.myResourceGroup.name
+  location              = azurerm_resource_group.discBotGPT.location
+  resource_group_name   = azurerm_resource_group.discBotGPT.name
   network_interface_ids = [azurerm_network_interface.myNic.id]
 
   vm_size             = "Standard_B1s"
