@@ -1,7 +1,7 @@
 terraform {
   backend "azurerm" {
     resource_group_name  = "discBotGPT"
-    storage_account_name = "storageaccount"
+    storage_account_name = azurerm_storage_account.storageaccount.name
     container_name       = "terraformbackend"
     key                  = "terraform.tfstate"
   }
