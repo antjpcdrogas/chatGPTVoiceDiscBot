@@ -27,7 +27,7 @@ jobs: # must run on ubuntu
       - name: Upload Artifact
         uses: actions/upload-artifact@master
         with:
-          name: terraform-plan
+          name: plan.out
           path: infra/plan.out
 
   apply: # run only if plan is successful
