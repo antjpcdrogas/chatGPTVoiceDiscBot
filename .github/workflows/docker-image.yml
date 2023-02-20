@@ -42,7 +42,7 @@ jobs: # must run on ubuntu
         uses: actions/download-artifact@master
         with:
           name: plan.out
-          path: infra
+          path: infra/plan.out
       - name: Terraform Apply
         run: terraform -chdir=infra apply -auto-approve plan.out
 
