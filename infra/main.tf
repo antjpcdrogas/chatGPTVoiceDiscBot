@@ -1,3 +1,5 @@
+
+
 provider "azurerm" {
   features {}
 
@@ -18,8 +20,8 @@ resource "azurerm_storage_account" "storageaccount" {
   }
 }
 
-resource "azurerm_storage_container" "terraformBackend" {
-  name                  = "terraformBackend"
+resource "azurerm_storage_container" "terraformbackend" {
+  name                  = "terraformbackend"
   storage_account_name  = azurerm_storage_account.storageaccount.name
   container_access_type = "private"
 }
