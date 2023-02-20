@@ -1,5 +1,9 @@
 name: Docker Image CI
-
+env:
+  ARM_CLIENT_ID: ${{ secrets.TF_ARM_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.TF_ARM_CLIENT_SECRET }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.TF_ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.TF_ARM_TENANT_ID }}
 on:
   push:
     branches: ["main"]
@@ -10,13 +14,8 @@ permissions:
 jobs: # must run on ubuntu
   plan:
     runs-on: ubuntu-latest
-    env:
-      ARM_CLIENT_ID: c22a48a5-21f1-4a10-98b1-9361f58e070f
-      ARM_CLIENT_SECRET: ${{ secrets.TF_ARM_CLIENT_SECRET }}
-      ARM_SUBSCRIPTION_ID: a1dac0b3-167a-44d8-b506-b590072031f7
-      ARM_TENANT_ID: 1fb1bf74-6a48-431b-a54f-2ce300609cec
-    #must have terraform installed. After installing, init the "infra" folder using -chdir flag, and run terraform plan
 
+    #must have terraform installed. After installing, init the "infra" folder using -chdir flag, and run terraform plan
     steps:
       - uses: actions/checkout@v2
       - uses: hashicorp/setup-terraform@v2
