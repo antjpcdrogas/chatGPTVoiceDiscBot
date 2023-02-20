@@ -1,0 +1,63 @@
+name: Deploy VM
+env:
+  ARM_CLIENT_ID: ${{ secrets.TF_ARM_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.TF_ARM_CLIENT_SECRET }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.TF_ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.TF_ARM_TENANT_ID }}
+on:
+  push:
+    branches: ["main"]
+    # paths:
+    #   - "infra/**"
+permissions:
+  contents: read
+jobs: # must run on ubuntu
+  plan:
+    runs-on: ubuntu-latest
+
+    #must have terraform installed. After installing, init the "infra" folder using -chdir flag, and run terraform plan
+    steps:
+      - uses: actions/checkout@v2
+      - uses: hashicorp/setup-terraform@v2
+      - name: Terraform Init
+        run: terraform -chdir=infra init
+      - name: Terraform Plan ## save play.out as artifact
+        run: terraform -chdir=infra plan -out=plan.out
+      - name: Upload Artifact
+        uses: actions/upload-artifact@master
+        with:
+          name: plan.out
+          path: infra
+
+  apply: # run only if plan is successful
+    needs: plan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: hashicorp/setup-terraform@v2
+      - name: Terraform Init
+        run: terraform -chdir=infra init
+      - name: Download Artifact
+        uses: actions/download-artifact@master
+        with:
+          name: plan.out
+          path: infra
+      - name: Terraform Apply
+        run: terraform -chdir=infra apply -auto-approve plan.out
+
+  destroy: # run after apply
+    needs: apply
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: hashicorp/setup-terraform@v2
+      - name: Terraform Init
+        run: terraform -chdir=infra init
+      - name: Terraform Destroy
+        run: terraform -chdir=infra destroy -auto-approve
+      - name: Terraform Destroy
+        run: terraform -chdir=infra destroy -auto-approve
+
+  #    - uses: actions/checkout@v3
+  #    - name: Build the Docker image
+  #      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
