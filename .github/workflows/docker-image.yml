@@ -8,20 +8,21 @@ on:
 jobs: # must run on ubuntu
   build:
     runs-on: ubuntu-latest
-    #must have terraform installed. After installing, init the "infra" folder and run terraform plan
+    #must have terraform installed. After installing, init the "infra" folder using -chdir flag, and run terraform plan
+
     steps:
       - uses: actions/checkout@v2
       - uses: hashicorp/setup-terraform@v1
       - name: Terraform Init
-        run: terraform init infra/
-      - name: Terraform Plan
-        run: terraform plan -out=plan.out infra/
+        run: terraform init  -chdir=infra
+      - name: Terraform Plan ## save play.out as artifact
+        run: terraform plan -out=plan.out  -chdir=infra
       - name: Terraform Apply
-        run: terraform apply -auto-approve plan.out
+        run: terraform apply -auto-approve plan.out  -chdir=infra
       - name: Terraform Destroy
-        run: terraform destroy -auto-approve infra/
+        run: terraform destroy -auto-approve  -chdir=infra
       - name: Terraform Destroy
-        run: terraform destroy -auto-approve infra/
+        run: terraform destroy -auto-approve  -chdir=infra
 
   #    - uses: actions/checkout@v3
   #    - name: Build the Docker image
