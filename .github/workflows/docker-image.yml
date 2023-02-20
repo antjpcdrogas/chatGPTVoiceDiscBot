@@ -3,8 +3,8 @@ name: Docker Image CI
 on:
   push:
     branches: ["main"]
-    paths:
-      - "infra/**"
+    # paths:
+    #   - "infra/**"
 jobs: # must run on ubuntu
   build:
     runs-on: ubuntu-latest
@@ -14,15 +14,15 @@ jobs: # must run on ubuntu
       - uses: actions/checkout@v2
       - uses: hashicorp/setup-terraform@v1
       - name: Terraform Init
-        run: terraform init  -chdir=infra
+        run: terraform -chdir=infra init
       - name: Terraform Plan ## save play.out as artifact
-        run: terraform plan -out=plan.out  -chdir=infra
+        run: terraform -chdir=infra plan -out=plan.out
       - name: Terraform Apply
-        run: terraform apply -auto-approve plan.out  -chdir=infra
+        run: terraform -chdir=infra apply -auto-approve plan.out
       - name: Terraform Destroy
-        run: terraform destroy -auto-approve  -chdir=infra
+        run: terraform -chdir=infra destroy -auto-approve
       - name: Terraform Destroy
-        run: terraform destroy -auto-approve  -chdir=infra
+        run: terraform -chdir=infra destroy -auto-approve
 
   #    - uses: actions/checkout@v3
   #    - name: Build the Docker image

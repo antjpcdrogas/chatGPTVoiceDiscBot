@@ -35,6 +35,7 @@ resource "azurerm_network_interface" "myNic" {
 
 
 
+
 resource "azurerm_virtual_machine" "myVM" {
   name                  = "myVM"
   location              = azurerm_resource_group.myResourceGroup.location
