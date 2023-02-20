@@ -24,4 +24,4 @@ jobs: # must run on ubuntu
           context: .
           push: true
           file: ./Dockerfile
-          tags: discbotgpt:latest
+          tags: docker.pkg.github.com/disc/my-image:latest
