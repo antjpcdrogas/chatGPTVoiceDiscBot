@@ -44,6 +44,11 @@ jobs: # must run on ubuntu
           path: infra
       - name: Terraform Apply
         run: terraform -chdir=infra apply -auto-approve plan.out
+      - name: Upload Artifact
+        uses: actions/upload-artifact@master
+        with:
+          name: terraform.tfstate
+          path: infra
 
   #destroy: # run after apply
   #  needs: apply
