@@ -26,4 +26,4 @@ jobs: # must run on ubuntu
           file: ./Dockerfile
           ## transform the github repository to lower case
 
-          tags: docker.pkg.github.com/chatgptvoicediscbot/discbotgpt:latest
+          tags: ${{ github.repository_owner }}/chatgptvoicediscbot/discbotgpt
