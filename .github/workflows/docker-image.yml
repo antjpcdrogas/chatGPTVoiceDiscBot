@@ -7,7 +7,7 @@ on:
     branches: ["docker-image"]
     # paths:
     #   - "infra/**"
-jobs: # must run on ubuntu
+jobs: # must run on ubuntu and use Container registry to push image
   build:
     runs-on: ubuntu-latest
     steps:
@@ -15,18 +15,11 @@ jobs: # must run on ubuntu
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v1
         with:
-          registry: docker.pkg.github.com
+          registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push
+      - name: Push to GitHub Container Registry
         uses: docker/build-push-action@v2
         with:
-          registry: docker.pkg.github.com
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-          context: .
           push: true
-          file: ./Dockerfile
-          ## transform the github repository to lower case
-
-          tags: ${{ github.repository_owner }}/chatgptvoicediscbot/discbotgpt:latest
+          tags: ghcr.io/chatGPTVoiceDiscBot/discbot:latest
