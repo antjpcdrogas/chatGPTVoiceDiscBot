@@ -22,4 +22,4 @@ jobs: # must run on ubuntu and use Container registry to push image
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: ghcr.io/chatgptvoicediscbot/discbot:latest
+          tags: ${{ github.repository_owner }}/chatgptvoicediscbot/discbot:latest
