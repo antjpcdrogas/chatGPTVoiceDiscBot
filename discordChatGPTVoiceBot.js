@@ -27,12 +27,16 @@ const { Configuration, OpenAIApi } = require("openai");
 const gTTS = require('gtts');
 require('dotenv').config()
 
+// take this value as script argument
 
 const botDiscId=process.env.botDiscId
 const channelId=process.env.channelId
 const guildId=process.env.guildId
 const gptModel="text-davinci-003"; // update this to use a different model. Available models: https://beta.openai.com/docs/engines
-const botTriggerWord="respon"; // bot trigger word
+//const gptModel="curie:ft-personal-2023-02-13-20-57-55"
+const Temperature=0.5; // temperature of the bot
+const MaxTokens=70; // max tokens of the bot
+const botTriggerWord="amigui"; // bot trigger word
 const VoiceLanguage="pt-PT"; // language of discord voice channel
 gTTSLanguage="pt"; // language of the bot
 const volume=0.5;
@@ -86,35 +90,52 @@ async function saveTextFile(textToSpeak,finalName) {
     catch(err)
     {
     console.log("Not able to read text, try again.");
+    console.log(err);
     }
     }
     
-    async function chatgpt_start(){
-        console.log("Starting bot...")
-            const configuration = new Configuration({ //TODO: add fine-tuning and custom model
-                apiKey: process.env.OPENAI_API_KEY,
-            });
-            openai = new OpenAIApi(configuration);
-            const currentguild = await client.guilds.fetch(guildId);
-        connection = joinVoiceChannel({
-            channelId: channelId,
-            guildId: guildId,
-            adapterCreator: currentguild.voiceAdapterCreator,
-            selfDeaf: false,
-            selfMute: false
-        })            
+async function chatgpt_start(){
+    console.log("Starting bot...")
+        const configuration = new Configuration({ //TODO: add fine-tuning and custom model
+            apiKey: process.env.OPENAI_API_KEY,
+        });
+        openai = new OpenAIApi(configuration);
+        const currentguild = await client.guilds.fetch(guildId);
+    connection = joinVoiceChannel({
+        channelId: channelId,
+        guildId: guildId,
+        adapterCreator: currentguild.voiceAdapterCreator,
+        selfDeaf: false,
+        selfMute: false
+    })
+    chatgpt("Tu és o Amiguinho. És um moderador do canal de voz chamado Praça. A partir de agora deves responder sempre com euforia e felicidade. As respostas devem ser curtas e divertidas e fazer sempre referências a batatinhas, nem que seja apenas um pormenor. As perguntas são feitas por portugueses, por isso todas as referências devem ser de Portugal.","sdfsdfsd");
+    
+}
+//remove keywork from string message
+function removeKeyword(message,keyword){
+    var index = message.indexOf(keyword);
+    if (index > -1) {
+        message = message.substring(0, index) + message.substring(index + keyword.length);
+
     }
+    return message;
+}
+
 async function chatgpt(message,msg){
+    console.log("ChatGPT request:" + message)
+
 const completion = await openai.createCompletion({
     model: gptModel,
+   // prompt: message + " ->",
     prompt: message,
-    max_tokens: 50,
-    temperature: 0.1,
-    //presencePenalty: 0,
+    max_tokens: MaxTokens,
+    temperature: Temperature,
+    //suffix: " ->",
+    //presencePenalty: 0, 
     //frequencyPenalty: 0,
     //bestOf: 1,
     //n: 1,
-    stop: ["stop"]
+    //stop:["\n"]
 });
 //
     
@@ -193,8 +214,21 @@ console.log('Starting up...');
 );
 //check if someone jointed channel
 client.on('messageCreate', message => { // when there is a message sent
-    if (message.content === "!status") {
-        message.channel.send("I'm alive!")   
+    
+
+    let msg = message.content.toLowerCase().includes("!status");
+
+   /* if (message.content === "!status") {
+        // msg is equal to the message content without !status keywork
+        msg=removeKeyword(message.content,"!status");
+        console.log("----->" + msg);
+        chatgpt(msg,message.channel);
+        //message.channel.send("I'm alive!")   
     }
+    if (msg) {
+        msg=removeKeyword(message.content,"!status");
+        console.log("----->" + msg);
+        chatgpt(msg,message.channel);
+    }*/
 })
 client.login(process.env.BOT_TOKEN);
