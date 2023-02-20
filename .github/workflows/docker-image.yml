@@ -5,7 +5,6 @@ on:
 
   push:
     branches: ["docker-image"]
-
     # paths:
     #   - "infra/**"
 jobs: # must run on ubuntu
