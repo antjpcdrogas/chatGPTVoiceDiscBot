@@ -4,9 +4,10 @@ on:
   ##commit message contains image
 
   push:
-    branches: ["docker-image"]
-    # paths:
-    #   - "infra/**"
+    branches: ["main"]
+    # any path change expect infra
+    paths-ignore:
+      - "infra/**"
 jobs: # must run on ubuntu and use Container registry to push image
   build:
     runs-on: ubuntu-latest
