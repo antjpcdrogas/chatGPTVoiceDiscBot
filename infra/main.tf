@@ -2,12 +2,6 @@ provider "azurerm" {
   features {}
 
 #configure backend
-    backend "azurerm" {
-        resource_group_name  = "discBotGPT"
-        storage_account_name = "storageAccount"
-        container_name       = "terraformBackend"
-        key                  = "terraform.tfstate"
-    }
 }
 
 
