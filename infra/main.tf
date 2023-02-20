@@ -84,5 +84,5 @@ resource "azurerm_virtual_machine" "myVM" {
 }
 
 output "public_ip_address" {
-  value = azurerm_network_interface.myNic.private_ip_address
+  value = azurerm_public_ip.myPublicIp.ip_address
 }
