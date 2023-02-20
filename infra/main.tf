@@ -21,6 +21,9 @@ resource "azurerm_subnet" "mySubnet" {
   address_prefixes     = ["10.0.1.0/24"]
 }
 
+
+# Create a network interface with public address
+
 resource "azurerm_network_interface" "myNic" {
   name                = "myNic"
   location            = azurerm_resource_group.myResourceGroup.location
@@ -30,17 +33,17 @@ resource "azurerm_network_interface" "myNic" {
     name                          = "myNicConfiguration"
     subnet_id                     = azurerm_subnet.mySubnet.id
     private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.myPublicIp.id
   }
 }
 
-
-#Add public ip address
 resource "azurerm_public_ip" "myPublicIp" {
   name                = "myPublicIp"
   location            = azurerm_resource_group.myResourceGroup.location
   resource_group_name = azurerm_resource_group.myResourceGroup.name
-  allocation_method   = "Static"
+  allocation_method   = "Dynamic"
 }
+
 
 
 
@@ -50,7 +53,6 @@ resource "azurerm_virtual_machine" "myVM" {
   location              = azurerm_resource_group.myResourceGroup.location
   resource_group_name   = azurerm_resource_group.myResourceGroup.name
   network_interface_ids = [azurerm_network_interface.myNic.id]
-  
 
   vm_size             = "Standard_B1s"
   delete_os_disk_on_termination = true
@@ -86,5 +88,5 @@ resource "azurerm_virtual_machine" "myVM" {
 }
 
 output "public_ip_address" {
-  value = azurerm_network_interface.myNic.public_ip_address
+  value = azurerm_network_interface.myNic.private_ip_address
 }
