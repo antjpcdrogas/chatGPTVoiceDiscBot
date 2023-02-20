@@ -28,7 +28,7 @@ jobs: # must run on ubuntu
         uses: actions/upload-artifact@master
         with:
           name: plan.out
-          path: infra/plan.out
+          path: infra
 
   apply: # run only if plan is successful
     needs: plan
@@ -42,7 +42,7 @@ jobs: # must run on ubuntu
         uses: actions/download-artifact@master
         with:
           name: plan.out
-          path: infra/plan.out
+          path: infra
       - name: Terraform Apply
         run: terraform -chdir=infra apply -auto-approve plan.out
 
