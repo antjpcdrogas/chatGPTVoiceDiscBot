@@ -9,7 +9,7 @@ provider "azurerm" {
 
 
 resource "azurerm_storage_account" "storageaccount" {
-  name                     = "storageaccount"
+  name                     = "storageaccountdiscordbotgptvoice"
   resource_group_name      = azurerm_resource_group.discBotGPT.name
   location                 = azurerm_resource_group.discBotGPT.location
   account_tier             = "Standard"
