@@ -30,7 +30,7 @@ resource "azurerm_storage_container" "terraformbackend" {
 
 resource "azurerm_resource_group" "discBotGPT" {
   name     = "discBotGPT"
-  location = "eastus"
+  location = "West Europe"
 }
 
 resource "azurerm_virtual_network" "myVnet" {
