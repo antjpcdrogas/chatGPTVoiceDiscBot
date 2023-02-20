@@ -34,6 +34,15 @@ resource "azurerm_network_interface" "myNic" {
 }
 
 
+#Add public ip address
+resource "azurerm_public_ip" "myPublicIp" {
+  name                = "myPublicIp"
+  location            = azurerm_resource_group.myResourceGroup.location
+  resource_group_name = azurerm_resource_group.myResourceGroup.name
+  allocation_method   = "Static"
+}
+
+
 
 
 resource "azurerm_virtual_machine" "myVM" {
@@ -41,6 +50,7 @@ resource "azurerm_virtual_machine" "myVM" {
   location              = azurerm_resource_group.myResourceGroup.location
   resource_group_name   = azurerm_resource_group.myResourceGroup.name
   network_interface_ids = [azurerm_network_interface.myNic.id]
+  
 
   vm_size             = "Standard_B1s"
   delete_os_disk_on_termination = true
@@ -76,5 +86,5 @@ resource "azurerm_virtual_machine" "myVM" {
 }
 
 output "public_ip_address" {
-  value = azurerm_network_interface.myNic.private_ip_address
+  value = azurerm_network_interface.myNic.public_ip_address
 }
