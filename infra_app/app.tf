@@ -58,10 +58,11 @@ resource "azurerm_dns_cname_record" "example" {
 
 resource "azurerm_dns_cname_record" "target" {
   name                = "target"
-  zone_name           = azurerm_dns_zone.example.name
-  resource_group_name = azurerm_resource_group.example.name
+  zone_name           = azurerm_dns_zone.dnszone.name
+  resource_group_name = var.resource_group_name
   ttl                 = 300
   record              = "discbotgpt1.com"
+}
 
 
 resource "azurerm_linux_virtual_machine" "myVM" {
