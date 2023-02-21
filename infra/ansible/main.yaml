@@ -21,15 +21,14 @@
       service:
         name: docker
         state: started
-    #pull image from dockerhub
-    - name: delete image
-      docker_image:
-        name: ghcr.io/antjpcdrogas/discbot:latest
-        state: absent
 
     - name: delete containers
       docker_container:
         name: discbot
+        state: absent
+    - name: delete image
+      docker_image:
+        name: ghcr.io/antjpcdrogas/discbot:latest
         state: absent
 
     - name: pull image
