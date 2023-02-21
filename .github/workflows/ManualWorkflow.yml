@@ -16,22 +16,38 @@ env:
 on:
   push:
     branches: ["main"]
-    # paths:
-    #   - "infra/**"
   workflow_dispatch:
     inputs:
       name:
         type: choice
         description: "What do you want to do?"
         options:
-          - Create
+          - CreateInfra
           - Destroy
-          - Ansible
+          - UpdateImage
 permissions:
   contents: read
 jobs:
-  ansible:
-    if: ${{ github.event.inputs.name == 'Ansible' }}
+  buildImage:
+    if: ${{ github.event.inputs.name == 'UpdateImage' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push to GitHub Container Registry
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/discbot:latest
+        env:
+          BOT_TOKEN: ${{secrets.NODE_DISC_API_KEY}}
+  startDocker:
+    needs: buildImage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -44,8 +60,9 @@ jobs:
         with:
           name: ansible.out
           path: infra/ansible/ansible.out
+
   plan:
-    if: ${{ github.event.inputs.name == 'Create' }}
+    if: ${{ github.event.inputs.name == 'CreateInfra' }}
     runs-on: ubuntu-latest
 
     #must have terraform installed. After installing, init the "infra" folder using -chdir flag, and run terraform plan
