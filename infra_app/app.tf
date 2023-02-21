@@ -37,7 +37,7 @@ resource "azurerm_public_ip" "myPublicIp" {
 #Create FQDN
 resource "azurerm_dns_zone" "dnszone" {
   name                = "discbotgpt.com"
-  resource_group_name = azurerm_resource_group.example.name
+  resource_group_name = var.resource_group_name
 }
 resource "azurerm_dns_a_record" "myFQDN" {
   name                = "discbotgpt"
