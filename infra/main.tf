@@ -103,11 +103,12 @@ resource "azurerm_linux_virtual_machine" "myVM" {
   source_image_reference {
     publisher = "Canonical"
     offer     = "UbuntuServer"
-    sku       = "20.04-LTS"
+    sku       = "18.04-LTS"
     version   = "latest"
   }
 }
-
+ all available ubuntu OS sku
+https://docs.microsoft.com/en-us/azure/virtual-machines/linux/cli-ps-findimage
 
 
 output "public_ip_address" {
