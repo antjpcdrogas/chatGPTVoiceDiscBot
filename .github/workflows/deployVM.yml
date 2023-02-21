@@ -4,6 +4,7 @@ env:
   ARM_CLIENT_SECRET: ${{ secrets.TF_ARM_CLIENT_SECRET }}
   ARM_SUBSCRIPTION_ID: ${{ secrets.TF_ARM_SUBSCRIPTION_ID }}
   ARM_TENANT_ID: ${{ secrets.TF_ARM_TENANT_ID }}
+  PRIVATE_KEY: ${{ secrets.VMPRIV }}
 on:
   push:
     branches: ["main"]
@@ -26,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: echo  ${{ secrets.VMPRIV }} > infra/ansible/VMPriv.pem
+      - run: echo  $PRIVATE_KEY > infra/ansible/VMPriv.pem
       - name: Ansible Playbook
         run: ansible-playbook -i infra/ansible/inventory infra/ansible/main.yaml
       - name: Upload Ansible Artifact
