@@ -16,21 +16,24 @@ env:
 on:
   push:
     branches: ["main"]
-  workflow_dispatch:
-    inputs:
-      name:
-        type: choice
-        description: "What do you want to do?"
-        options:
-          - CreateAll
-          - DestroyAll
+    # if change in file discordChatGPTVoice.js
+    paths:
+      - "discordChatGPTVoice.js"
+
+#workflow_dispatch:
+#  inputs:
+#    name:
+#      type: choice
+#      description: "What do you want to do?"
+#      options:
+#        - CreateAll
+#        - DestroyAll
 
 permissions:
   contents: read
   packages: write
 jobs:
   buildImage:
-    if: ${{ github.event.inputs.name == 'CreateAll' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -103,14 +106,16 @@ jobs:
           name: terraform.tfstate
           path: infra_app
 
-  destroy: # run after apply
-    if: ${{ github.event.inputs.name == 'DestroyAll' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: hashicorp/setup-terraform@v2
-      - name: Terraform Init
-        run: terraform -chdir=infra_app init
-      #Destroy only VM, NIC, and Public IP
-      - name: Terraform Destroy
-        run: terraform -chdir=infra_app destroy
+  # destroy: # run after apply
+  #   #run only if any job of the workflow fails
+  #   if: ${{ github.event.inputs.name == 'DestroyAll' }}
+#
+#   runs-on: ubuntu-latest
+#   steps:
+#     - uses: actions/checkout@v2
+#     - uses: hashicorp/setup-terraform@v2
+#     - name: Terraform Init
+#       run: terraform -chdir=infra_app init
+#     #Destroy only VM, NIC, and Public IP
+#     - name: Terraform Destroy
+#       run: terraform -chdir=infra_app destroy

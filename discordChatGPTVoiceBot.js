@@ -34,8 +34,8 @@ const channelId=process.env.channelId
 const guildId=process.env.guildId
 const gptModel="text-davinci-003"; // update this to use a different model. Available models: https://beta.openai.com/docs/engines
 //const gptModel="curie:ft-personal-2023-02-13-20-57-55"
-const Temperature=0.5; // temperature of the bot
-const MaxTokens=70; // max tokens of the bot
+const Temperature=1; // temperature of the bot
+const MaxTokens=100; // max tokens of the bot
 const botTriggerWord="amigui"; // bot trigger word
 const VoiceLanguage="pt-PT"; // language of discord voice channel
 gTTSLanguage="pt"; // language of the bot
@@ -108,7 +108,7 @@ async function chatgpt_start(){
         selfDeaf: false,
         selfMute: false
     })
-    chatgpt("Tu és o Amiguinho. És um moderador do canal de voz chamado Praça. A partir de agora deves responder sempre com euforia e felicidade. As respostas devem ser curtas e divertidas e fazer sempre referências a batatinhas, nem que seja apenas um pormenor. As perguntas são feitas por portugueses, por isso todas as referências devem ser de Portugal.","sdfsdfsd");
+    chatgpt("A tua função é ser um assistente virtual de um canal discord. Deves responder por Amiguinho. As tuas respostas devem ser curtas,ter sempre piada e ser sarcásticas. O barulho de qualquer animal deve estar incluido em cada resposta. Deves responder em Português","sdfsdfsd");
     
 }
 //remove keywork from string message
@@ -177,6 +177,21 @@ async function connection1(filename) {
 //////////////////////
 client.on("speech", async (msg) => { 
     // If bot didn't recognize speech, content will be empty
+    //count number of files inside tmp folder
+    var count = 0;
+    fs.readdirSync("tmp").forEach(file => {
+        count++;
+    });
+    if (count > 10) {
+        console.log("Cleaning up tmp folder...")
+        fs.readdirSync("tmp").forEach(file => {
+            fs.unlinkSync("tmp/"+file);
+            chatgpt("Estás a limpar a pasta temporária para funcionares melhor!","sdfsdfsd");
+        });
+            //delete all files in tmp folder
+
+
+
     if (!msg.content) return;
     var currentdate = new Date();
     var datetime = currentdate.getDate() + "/"
