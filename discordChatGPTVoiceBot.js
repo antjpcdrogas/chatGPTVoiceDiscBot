@@ -111,6 +111,7 @@ async function chatgpt_start(){
     chatgpt("Deves responder ás proximas questões ou afirmações apenas com barulhos de animais.","sdfsdfsd");
 }
 
+
 //remove keywork from string message
 function removeKeyword(message,keyword){
     var index = message.indexOf(keyword);
