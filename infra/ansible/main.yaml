@@ -40,5 +40,5 @@
       docker_container:
         name: discbot
         image: ghcr.io/antjpcdrogas/discbot:latest
-        restart_policy:
+        restart_policy: always
         state: started
