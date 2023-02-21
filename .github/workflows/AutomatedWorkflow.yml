@@ -98,7 +98,7 @@ jobs:
           name: plan.out
           path: infra_app
       - name: Terraform Apply
-        run: terraform -chdir=infra_app apply -auto-approve plan_app.out
+        run: terraform -chdir=infra_app apply -auto-approve plan_app.out -lock=false
       - name: Upload Artifact
         uses: actions/upload-artifact@master
         with:
