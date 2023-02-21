@@ -107,8 +107,7 @@ resource "azurerm_linux_virtual_machine" "myVM" {
     version   = "latest"
   }
 }
- all available ubuntu OS sku
-https://docs.microsoft.com/en-us/azure/virtual-machines/linux/cli-ps-findimage
+
 
 
 output "public_ip_address" {
