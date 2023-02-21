@@ -1,0 +1,12 @@
+#ansible playbook that prints the hostname of the server
+
+- hosts: all
+  become: yes
+  tasks:
+    - name: print hostname
+      shell: hostname
+      register: hostname
+
+    - name: print hostname
+      debug:
+        msg: "{{hostname.stdout}}"

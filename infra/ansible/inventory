@@ -1,0 +1,1 @@
+20.86.107.66 ansible_ssh_private_key_file=VMPriv.pem ansible_ssh_user=adminuser ansible_ssh_common_args='-o StrictHostKeyChecking=no'
