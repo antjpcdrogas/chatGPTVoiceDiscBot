@@ -1,1 +1,1 @@
-PRIVATE_IP ansible_ssh_private_key_file=infra/ansible/VMPriv.pem ansible_ssh_user=adminuser ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+PRIVATE_IP ansible_ssh_private_key_file=infra_app/ansible/VMPriv.pem ansible_ssh_user=adminuser ansible_ssh_common_args='-o StrictHostKeyChecking=no'
