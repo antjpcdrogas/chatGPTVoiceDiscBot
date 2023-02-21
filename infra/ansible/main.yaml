@@ -22,6 +22,16 @@
         name: docker
         state: started
     #pull image from dockerhub
+    - delete docker images if they exist
+      docker_image:
+        name: ghcr.io/antjpcdrogas/discbot:latest
+        state: absent
+
+    - name: delete containers 
+      docker_container:
+        name: discbot
+        state: absent
+  
     - name: pull image
       docker_image:
         name: ghcr.io/antjpcdrogas/discbot:latest
@@ -31,5 +41,5 @@
       docker_container:
         name: discbot
         image: ghcr.io/antjpcdrogas/discbot:latest
-        restart_policy: always
+        restart_policy: 
         state: started
