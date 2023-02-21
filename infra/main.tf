@@ -74,54 +74,42 @@ resource "azurerm_public_ip" "myPublicIp" {
   allocation_method   = "Dynamic"
 }
 
-resource "azurerm_virtual_machine" "myVM" {
-  name                  = "myVM"
-  location              = azurerm_resource_group.discBotGPT.location
-  resource_group_name   = azurerm_resource_group.discBotGPT.name
-  network_interface_ids = [azurerm_network_interface.myNic.id]
 
-  vm_size             = "Standard_B1s"
-  delete_os_disk_on_termination = true
 
-  storage_image_reference {
+
+
+resource "azurerm_linux_virtual_machine" "myVM" {
+  name                = "VMDiscbotGPT"
+  resource_group_name = azurerm_resource_group.discBotGPT.name
+  location            = azurerm_resource_group.discBotGPT.location
+  size                = "Standard_B1s"
+  admin_username      = "adminuser"
+  network_interface_ids = [
+    azurerm_network_interface.myNic.id,
+  ]
+
+  admin_ssh_key {
+    username   = "adminuser"
+    public_key = file("VMPriv.pem.pub")
+    
+
+  }
+
+  os_disk {
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
+
+  source_image_reference {
     publisher = "Canonical"
     offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
+    sku       = "16.04-LTS"
     version   = "latest"
   }
-
-  storage_os_disk {
-    name              = "myOsDisk"
-    caching           = "ReadWrite"
-    create_option     = "FromImage"
-    managed_disk_type = "Standard_LRS"
-  }
-
- // add OS linux profile
-    os_profile {
-        computer_name  = "myVM"
-        admin_username = "myadmin"
-        admin_password = "M1#yadminpassword"
-
-
-    }
-    
-    os_profile_linux_config {
-        disable_password_authentication = false
-        ssh_keys = ["${var.ssh_keys}"]
-    }
-      
 }
+
+
 
 output "public_ip_address" {
   value = azurerm_public_ip.myPublicIp.ip_address
-}
-
-
-variable "ssh_keys" {
-  type = list
-  default = [{
-    path     = "/home/myadmin/.ssh/authorized_keys"
-    key_data = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCsYMdj23JRD02p8aQRZF7QUO/2W2oADgu3ngVnLeP9gsF0Zwkh7JyxNIlMFHM8sLcVErwRSjCwPvU6vdR7TheNhFsX7zicn9uYXmRuWDdkWcQ0J3lijor4ty/qyqb+3SArwKtB7L9EJaCdPx6oitLm42gEmji+pJGVHRTwzHCDXH2ptKZTcpovDH1WnUFDiRIdDojL8+q31Gq9Ns7P8tIiVicc5XQz1sIbsQ7Dtj6dyHU79l9H3Gj16LiHFEPmOa9ka9DgLJTAd+Acrt52PczbapGM7wqKJW+r2jlQQg8EeOvpqvs+PeTYsuQ1DTuTdc0cC7aLgM+i27e+SNqLvZryE4j8ho2r/Lbisx/MD/tUZNAdkXZapm5PZsjFOYb/LAEgoJKP42IDpJqlvmglEWbfwIWD1EagzcjaPrOZjVizgg+8mXJCPDNAuxf3cAc+d9IKNKDfeLvH1aoqT1iRHlNGC/kt9KdTG1SE+XgYDW10fAPJgXDJLG07deHbStj6QWM= quskia@DESKTOP-UIEBEJ5"
-  }]
 }
