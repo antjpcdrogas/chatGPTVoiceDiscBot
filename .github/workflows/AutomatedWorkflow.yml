@@ -27,6 +27,7 @@ on:
 
 permissions:
   contents: read
+  packages: write
 jobs:
   buildImage:
     if: ${{ github.event.inputs.name == 'CreateAll' }}
