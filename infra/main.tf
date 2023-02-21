@@ -119,7 +119,7 @@ output "public_ip_address" {
 
 
 variable "ssh_keys" {
-  type = "list"
+  type = list(string)
   default = [{
     path     = "/home/myadmin/.ssh/authorized_keys"
     key_data = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCsYMdj23JRD02p8aQRZF7QUO/2W2oADgu3ngVnLeP9gsF0Zwkh7JyxNIlMFHM8sLcVErwRSjCwPvU6vdR7TheNhFsX7zicn9uYXmRuWDdkWcQ0J3lijor4ty/qyqb+3SArwKtB7L9EJaCdPx6oitLm42gEmji+pJGVHRTwzHCDXH2ptKZTcpovDH1WnUFDiRIdDojL8+q31Gq9Ns7P8tIiVicc5XQz1sIbsQ7Dtj6dyHU79l9H3Gj16LiHFEPmOa9ka9DgLJTAd+Acrt52PczbapGM7wqKJW+r2jlQQg8EeOvpqvs+PeTYsuQ1DTuTdc0cC7aLgM+i27e+SNqLvZryE4j8ho2r/Lbisx/MD/tUZNAdkXZapm5PZsjFOYb/LAEgoJKP42IDpJqlvmglEWbfwIWD1EagzcjaPrOZjVizgg+8mXJCPDNAuxf3cAc+d9IKNKDfeLvH1aoqT1iRHlNGC/kt9KdTG1SE+XgYDW10fAPJgXDJLG07deHbStj6QWM= quskia@DESKTOP-UIEBEJ5"
