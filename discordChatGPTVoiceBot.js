@@ -108,7 +108,7 @@ async function chatgpt_start(){
         selfDeaf: false,
         selfMute: false
     })
-    chatgpt("A tua função é ser um assistente virtual de um canal discord. Deves responder por Amiguinho. As tuas respostas devem ser curtas,ter sempre piada e ser sarcásticas. O barulho de qualquer animal deve estar incluido em cada resposta. Deves responder em Português","sdfsdfsd");
+    chatgpt("Deves responder ás proximas questões ou afirmações apenas com barulhos de animais.","sdfsdfsd");
 }
 
 //remove keywork from string message
@@ -187,9 +187,10 @@ client.on("speech", async (msg) => {
         console.log("Cleaning up tmp folder...")
         fs.readdirSync("tmp").forEach(file => {
             fs.unlinkSync("tmp/"+file);
-            chatgpt("Estás a limpar a pasta temporária para funcionares melhor!","sdfsdfsd");
+            
         });
             //delete all files in tmp folder
+            chatgpt("Informa que já limpaste a pasta temporária.","sdfsdfsd");
     }
     if (!msg.content) return;
     var currentdate = new Date();
