@@ -189,7 +189,7 @@ client.on("speech", async (msg) => {
             chatgpt("Estás a limpar a pasta temporária para funcionares melhor!","sdfsdfsd");
         });
             //delete all files in tmp folder
-
+    }
 
 
     if (!msg.content) return;
