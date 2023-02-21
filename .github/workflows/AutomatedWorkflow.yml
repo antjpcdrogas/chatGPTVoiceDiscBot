@@ -77,7 +77,7 @@ jobs:
       - name: Terraform Init
         run: terraform -chdir=infra_app init
       - name: Terraform Plan ## save play.out as artifact
-        run: terraform -chdir=infra_app plan -out=plan_app.out
+        run: terraform -chdir=infra_app plan -out=plan_app.out -lock=false
       - name: Upload Artifact
         uses: actions/upload-artifact@master
         with:
