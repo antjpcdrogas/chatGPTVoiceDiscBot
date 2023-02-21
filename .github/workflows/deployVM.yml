@@ -27,8 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: echo  $PRIVATE_KEY > infra/ansible/VMPriv.pem
-      - run: chmod 400 infra/ansible/VMPriv.pem
+      - run: echo $PRIVATE_KEY > infra/ansible/VMPriv.pem
+      - run: chmod 600 infra/ansible/VMPriv.pem
       - name: Ansible Playbook
         run: ansible-playbook -i infra/ansible/inventory infra/ansible/main.yaml
       - name: Upload Ansible Artifact
