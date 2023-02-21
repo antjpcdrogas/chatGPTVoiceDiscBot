@@ -9,14 +9,14 @@ on:
     branches: ["main"]
     # paths:
     #   - "infra/**"
-
-  inputs:
-    name:
-      type: choice
-      description: "What do you want to do?"
-      options:
-        - Create
-        - Destroy
+  workflow_dispatch:
+    inputs:
+      name:
+        type: choice
+        description: "What do you want to do?"
+        options:
+          - Create
+          - Destroy
 permissions:
   contents: read
 jobs: # must run on ubuntu
