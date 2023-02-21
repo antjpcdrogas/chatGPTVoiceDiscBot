@@ -38,7 +38,7 @@ jobs:
       - run: echo "$PRIVATE_KEY" > infra/ansible/VMPriv.pem
       - run: chmod 600 infra/ansible/VMPriv.pem
       - name: Ansible Playbook
-        run: ansible-playbook -i infra/ansible/inventory infra/ansible/main.yaml --extra-vars 'BOT_TOKEN="$BOT_TOKEN" OPENAI_API_KEY="$OPENAI_API_KEY" botDiscId="$botDiscId" channelId="$channelId" guildId="$guildId"'  > infra/ansible/ansible.out
+        run: ansible-playbook -i infra/ansible/inventory infra/ansible/main.yaml --extra-vars "BOT_TOKEN=$BOT_TOKEN OPENAI_API_KEY=$OPENAI_API_KEY botDiscId=$botDiscId channelId=$channelId guildId=$guildId" > infra/ansible/ansible.out
       - name: Upload Ansible Artifact
         uses: actions/upload-artifact@master
         with:
