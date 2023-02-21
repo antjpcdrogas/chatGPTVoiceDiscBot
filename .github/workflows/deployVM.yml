@@ -11,7 +11,7 @@ env:
   OPENAI_API_KEY: ${{secrets.NODE_OPENAI_API_KEY}}
   botDiscId: ${{secrets.NODE_DISC_BOT_ID}}
   channelId: ${{secrets.NODE_DISC_CHANNEL_ID}}
-  guildId: "${{secrets.NODE_DISC_GUILD_ID}}
+  guildId: ${{secrets.NODE_DISC_GUILD_ID}}
 
 on:
   push:
