@@ -155,6 +155,7 @@ if   (fs.existsSync(fileName)) {console.log("sdf");return;}
     connection1(fileName);
 }
 
+
 async function connection1(filename) {
     const currentguild = await client.guilds.fetch(guildId);
         connection = joinVoiceChannel({
