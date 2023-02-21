@@ -191,7 +191,6 @@ client.on("speech", async (msg) => {
             //delete all files in tmp folder
     }
 
-
     if (!msg.content) return;
     var currentdate = new Date();
     var datetime = currentdate.getDate() + "/"
