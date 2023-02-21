@@ -1,0 +1,113 @@
+name: Full Workflow
+env:
+  ARM_CLIENT_ID: ${{ secrets.TF_ARM_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.TF_ARM_CLIENT_SECRET }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.TF_ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.TF_ARM_TENANT_ID }}
+
+  PRIVATE_KEY: ${{ secrets.VMPRIV }}
+
+  BOT_TOKEN: ${{secrets.NODE_DISC_API_KEY}}
+  OPENAI_API_KEY: ${{secrets.NODE_OPENAI_API_KEY}}
+  botDiscId: ${{secrets.NODE_DISC_BOT_ID}}
+  channelId: ${{secrets.NODE_DISC_CHANNEL_ID}}
+  guildId: ${{secrets.NODE_DISC_GUILD_ID}}
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+    inputs:
+      name:
+        type: choice
+        description: "What do you want to do?"
+        options:
+          - CreateAll
+          - DestroyAll
+
+permissions:
+  contents: read
+jobs:
+  buildImage:
+    if: ${{ github.event.inputs.name == 'CreateAll' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push to GitHub Container Registry
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/discbot:latest
+        env:
+          BOT_TOKEN: ${{secrets.NODE_DISC_API_KEY}}
+  startDocker:
+    needs: buildImage,apply
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: echo "$PRIVATE_KEY" > infra_app/ansible/VMPriv.pem
+      - run: chmod 600 infra_app/ansible/VMPriv.pem
+      - name: Ansible Playbook
+        run: ansible-playbook -i infra_app/ansible/inventory infra_app/ansible/main.yaml --extra-vars "BOT_TOKEN=$BOT_TOKEN OPENAI_API_KEY=$OPENAI_API_KEY botDiscId=$botDiscId channelId=$channelId guildId=$guildId"
+      - name: Upload Ansible Artifact
+        uses: actions/upload-artifact@master
+        with:
+          name: ansible.out
+          path: infra_app/ansible/ansible.out
+
+  plan:
+    if: ${{ github.event.inputs.name == 'CreateAll' }}
+    runs-on: ubuntu-latest
+
+    #must have terraform installed. After installing, init the "infra" folder using -chdir flag, and run terraform plan
+    steps:
+      - uses: actions/checkout@v2
+      - uses: hashicorp/setup-terraform@v2
+      - name: Terraform Init
+        run: terraform -chdir=infra_app init
+      - name: Terraform Plan ## save play.out as artifact
+        run: terraform -chdir=infra_app plan -out=plan_app.out
+      - name: Upload Artifact
+        uses: actions/upload-artifact@master
+        with:
+          name: plan.out
+          path: infra_app
+
+  apply: # run only if plan is successful
+    needs: plan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: hashicorp/setup-terraform@v2
+      - name: Terraform Init
+        run: terraform -chdir=infra_app init
+      - name: Download Artifact
+        uses: actions/download-artifact@master
+        with:
+          name: plan.out
+          path: infra_app
+      - name: Terraform Apply
+        run: terraform -chdir=infra_app apply -auto-approve plan_app.out
+      - name: Upload Artifact
+        uses: actions/upload-artifact@master
+        with:
+          name: terraform.tfstate
+          path: infra_app
+
+  destroy: # run after apply
+    if: ${{ github.event.inputs.name == 'DestroyAll' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: hashicorp/setup-terraform@v2
+      - name: Terraform Init
+        run: terraform -chdir=infra_app init
+      #Destroy only VM, NIC, and Public IP
+      - name: Terraform Destroy
+        run: terraform -chdir=infra_app destroy
