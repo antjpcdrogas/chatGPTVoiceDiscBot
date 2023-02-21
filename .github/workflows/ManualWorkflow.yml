@@ -100,14 +100,15 @@ jobs:
           name: terraform.tfstate
           path: infra
 
-  destroy: # run after apply
-    if: ${{ github.event.inputs.name == 'Destroy' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: hashicorp/setup-terraform@v2
-      - name: Terraform Init
-        run: terraform -chdir=infra init
-      #Destroy only VM, NIC, and Public IP
-      - name: Terraform Destroy
-        run: terraform -chdir=infra destroy -auto-approve --target azurerm_virtual_machine.vm --target=azurerm_network_interface.nic --target=azurerm_public_ip.ip
+  # destroy: # run after apply
+  #   if: ${{ github.event.inputs.name == 'Destroy' }}
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: hashicorp/setup-terraform@v2
+  #     - name: Terraform Init
+  #       run: terraform -chdir=infra init
+  #     #Destroy only VM, NIC, and Public IP
+  #     - name: Terraform Destroy
+  #       run: terraform -chdir=infra destroy -auto-approve --target azurerm_virtual_machine.vm --target=azurerm_network_interface.nic --target=azurerm_public_ip.ip
+#
