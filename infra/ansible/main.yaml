@@ -42,3 +42,9 @@
         image: ghcr.io/antjpcdrogas/discbot:latest
         restart_policy: always
         state: started
+        env:
+          BOT_TOKEN: "{{ BOT_TOKEN }}"
+          OPENAI_API_KEY: "{{ OPENAI_API_KEY }}"
+          botDiscId: "{{ botDiscId }}"
+          channelId: "{{ channelId }}"
+          guildId: "{{ guildId }}"

@@ -4,7 +4,15 @@ env:
   ARM_CLIENT_SECRET: ${{ secrets.TF_ARM_CLIENT_SECRET }}
   ARM_SUBSCRIPTION_ID: ${{ secrets.TF_ARM_SUBSCRIPTION_ID }}
   ARM_TENANT_ID: ${{ secrets.TF_ARM_TENANT_ID }}
+
   PRIVATE_KEY: ${{ secrets.VMPRIV }}
+
+  BOT_TOKEN: ${{secrets.NODE_DISC_API_KEY}}
+  OPENAI_API_KEY: ${{secrets.NODE_OPENAI_API_KEY}}
+  botDiscId: ${{secrets.NODE_DISC_BOT_ID}}
+  channelId: ${{secrets.NODE_DISC_CHANNEL_ID}}
+  guildId: "${{secrets.NODE_DISC_GUILD_ID}}
+
 on:
   push:
     branches: ["main"]
@@ -30,7 +38,7 @@ jobs:
       - run: echo "$PRIVATE_KEY" > infra/ansible/VMPriv.pem
       - run: chmod 600 infra/ansible/VMPriv.pem
       - name: Ansible Playbook
-        run: ansible-playbook -i infra/ansible/inventory infra/ansible/main.yaml
+        run: ansible-playbook -i infra/ansible/inventory infra/ansible/main.yaml --extra-vars BOT_TOKEN="$BOT_TOKEN" OPENAI_API_KEY="$OPENAI_API_KEY" botDiscId="$botDiscId" channelId="$channelId" guildId="$guildId"  > infra/ansible/ansible.out
       - name: Upload Ansible Artifact
         uses: actions/upload-artifact@master
         with:
