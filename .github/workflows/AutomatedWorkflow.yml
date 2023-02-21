@@ -68,7 +68,6 @@ jobs:
           path: infra_app/ansible/ansible.out
 
   plan:
-    if: ${{ github.event.inputs.name == 'CreateAll' }}
     runs-on: ubuntu-latest
 
     #must have terraform installed. After installing, init the "infra" folder using -chdir flag, and run terraform plan
