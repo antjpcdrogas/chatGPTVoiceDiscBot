@@ -76,7 +76,7 @@ jobs:
       - uses: hashicorp/setup-terraform@v2
       - name: Terraform Init
         run: terraform -chdir=infra_app init
-      - run: terraform force-unlock -force 6f7bd2a1-1d20-632e-69c2-34edfd4c5fc2 -chdir=infra_app
+      - run: terraform -force force-unlock  6f7bd2a1-1d20-632e-69c2-34edfd4c5fc2 -chdir=infra_app
       - name: Terraform Plan ## save play.out as artifact
         run: terraform -chdir=infra_app plan -out=plan_app.out
       - name: Upload Artifact
