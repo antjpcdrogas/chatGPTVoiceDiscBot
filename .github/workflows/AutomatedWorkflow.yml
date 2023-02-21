@@ -18,7 +18,7 @@ on:
     branches: ["main"]
     # if change in file discordChatGPTVoice.js
     paths:
-      - "discordChatGPTVoice.js"
+      - "discordChatGPTVoiceBot.js"
 
 #workflow_dispatch:
 #  inputs:
