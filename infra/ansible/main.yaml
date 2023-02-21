@@ -10,3 +10,26 @@
     - name: print hostname
       debug:
         msg: "{{hostname.stdout}}"
+    #install dockerd
+    #install dockerd
+    - name: install docker
+      apt:
+        name: docker.io
+        state: present
+    #start dockerd
+    - name: start docker
+      service:
+        name: docker
+        state: started
+    #pull image from dockerhub
+    - name: pull image
+      docker_image:
+        name: ghcr.io/antjpcdrogas/discbot:latest
+        source: pull
+    #run image
+    - name: run image
+      docker_container:
+        name: discbot
+        image: ghcr.io/antjpcdrogas/discbot:latest
+        restart_policy: always
+        state: started
