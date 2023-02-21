@@ -1,1 +1,1 @@
-51.144.23.39 ansible_ssh_private_key_file=infra/ansible/VMPriv.pem ansible_ssh_user=adminuser ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+discbotgpt.westeurope.cloudapp.azure.com ansible_ssh_private_key_file=infra/ansible/VMPriv.pem ansible_ssh_user=adminuser ansible_ssh_common_args='-o StrictHostKeyChecking=no'
