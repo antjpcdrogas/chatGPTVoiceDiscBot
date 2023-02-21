@@ -44,7 +44,6 @@ resource "azurerm_dns_a_record" "myFQDN" {
   zone_name           = azurerm_dns_zone.dnszone.name
   resource_group_name = var.resource_group_name
   ttl                 = 300
-  records             = [azurerm_public_ip.myPublicIp.ip_address]
   target_resource_id  = azurerm_public_ip.myPublicIp.id
 }
 
