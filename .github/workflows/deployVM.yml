@@ -9,10 +9,19 @@ on:
     branches: ["main"]
     # paths:
     #   - "infra/**"
+
+  inputs:
+    name:
+      type: choice
+      description: "What do you want to do?"
+      options:
+        - Create
+        - Destroy
 permissions:
   contents: read
 jobs: # must run on ubuntu
   plan:
+    if: ${{ github.event.inputs.name == 'Create' }}
     runs-on: ubuntu-latest
 
     #must have terraform installed. After installing, init the "infra" folder using -chdir flag, and run terraform plan
@@ -50,19 +59,14 @@ jobs: # must run on ubuntu
           name: terraform.tfstate
           path: infra
 
-  #destroy: # run after apply
-  #  needs: apply
-  #  runs-on: ubuntu-latest
-  #  steps:
-  #    - uses: actions/checkout@v2
-  #    - uses: hashicorp/setup-terraform@v2
-  #    - name: Terraform Init
-  #      run: terraform -chdir=infra init
-  #    - name: Terraform Destroy
-  #      run: terraform -chdir=infra destroy -auto-approve
-  #    - name: Terraform Destroy
-  #      run: terraform -chdir=infra destroy -auto-approve
-#
-#    - uses: actions/checkout@v3
-#    - name: Build the Docker image
-#      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+  destroy: # run after apply
+    if: ${{ github.event.inputs.name == 'Destroy' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: hashicorp/setup-terraform@v2
+      - name: Terraform Init
+        run: terraform -chdir=infra init
+      #Destroy only VM, NIC, and Public IP
+      - name: Terraform Destroy
+        run: terraform -chdir=infra destroy -auto-approve -target=azurerm_virtual_machine.vm -target=azurerm_network_interface.nic -target=azurerm_public_ip.ip
