@@ -34,7 +34,7 @@ const channelId=process.env.channelId
 const guildId=process.env.guildId
 const gptModel="text-davinci-003"; // update this to use a different model. Available models: https://beta.openai.com/docs/engines
 //const gptModel="curie:ft-personal-2023-02-13-20-57-55"
-const Temperature=1; // temperature of the bot
+const Temperature=0.1; // temperature of the bot
 const MaxTokens=100; // max tokens of the bot
 const botTriggerWord="amigui"; // bot trigger word
 const VoiceLanguage="pt-PT"; // language of discord voice channel
@@ -128,9 +128,9 @@ async function chatgpt(message,msg){
 const completion = await openai.createCompletion({
     model: gptModel,
    // prompt: message + " ->",
-    prompt: message,
+    prompt: "Deves responder com sarcasmo e em  tom ironico, fazendo referencia a batatinhas." + message,
     max_tokens: MaxTokens,
-    temperature: Temperature,
+   // temperature: Temperature,
     //suffix: " ->",
     //presencePenalty: 0, 
     //frequencyPenalty: 0,
@@ -232,7 +232,23 @@ console.log('Starting up...');
 client.on('messageCreate', message => { // when there is a message sent
     
 
-    let msg = message.content.toLowerCase().includes("!status");
+
+    //disconnect from voice channel
+    if (message.content.toLowerCase().includes("!stop")) {
+        console.log("Disconnecting from voice channel...");
+        connection.destroy();
+        console.log("Disconnected from voice channel.");
+    }
+
+    //connect to 
+    if (message.content.toLowerCase().includes("!start")) { 
+        console.log("Connecting to voice channel...");
+        chatgpt_start();
+        console.log("Connected to voice channel.");
+    }
+    
+
+
 
    /* if (message.content === "!status") {
         // msg is equal to the message content without !status keywork
