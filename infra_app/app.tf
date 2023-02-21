@@ -34,6 +34,15 @@ resource "azurerm_public_ip" "myPublicIp" {
   allocation_method   = "Dynamic"
 }
 
+#Create FQDN
+resource "azurerm_dns_a_record" "myFQDN" {
+  name                = "discbotgpt"
+  zone_name           = "discbotgpt.com"
+  resource_group_name = var.resource_group_name
+  ttl                 = 300
+  records             = [azurerm_public_ip.myPublicIp.ip_address]
+}
+
 resource "azurerm_linux_virtual_machine" "myVM" {
   name                = "VMDiscbotGPT"
   location            = var.location
@@ -80,5 +89,5 @@ variable "location" {
 
 variable "subnet_id" {
   type = string
-  default = "/subscriptions/a1dac0b3-167a-44d8-b506-b590072031f7/resourceGroups/discBotGPT/providers/Microsoft.Network/networkInterfaces/myNic/ipConfigurations/myNicConfiguration"
+  default = "/subscriptions/a1dac0b3-167a-44d8-b506-b590072031f7/resourceGroups/discBotGPT/providers/Microsoft.Network/virtualNetworks/myVnet/subnets/mySubnet"
 }

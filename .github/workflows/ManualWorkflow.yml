@@ -1,4 +1,4 @@
-name: Deploy VM
+name: ManualWorkflow
 env:
   ARM_CLIENT_ID: ${{ secrets.TF_ARM_CLIENT_ID }}
   ARM_CLIENT_SECRET: ${{ secrets.TF_ARM_CLIENT_SECRET }}
