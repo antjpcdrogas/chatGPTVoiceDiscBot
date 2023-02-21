@@ -47,23 +47,6 @@ resource "azurerm_dns_a_record" "myFQDN" {
   target_resource_id  = azurerm_public_ip.myPublicIp.id
 }
 
-resource "azurerm_dns_cname_record" "example" {
-  name                = "discbotgpt"
-  zone_name           = azurerm_dns_zone.dnszone.name
-  resource_group_name = var.resource_group_name
-  ttl                 = 300
-
-  target_resource_id  = azurerm_dns_cname_record.target.id
-}
-
-resource "azurerm_dns_cname_record" "target" {
-  name                = "target"
-  zone_name           = azurerm_dns_zone.dnszone.name
-  resource_group_name = var.resource_group_name
-  ttl                 = 300
-  record              = "discbotgpt1.com"
-}
-
 
 resource "azurerm_linux_virtual_machine" "myVM" {
   name                = "VMDiscbotGPT"
