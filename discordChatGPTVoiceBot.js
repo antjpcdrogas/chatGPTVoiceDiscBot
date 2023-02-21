@@ -109,7 +109,6 @@ async function chatgpt_start(){
         selfMute: false
     })
     chatgpt("A tua função é ser um assistente virtual de um canal discord. Deves responder por Amiguinho. As tuas respostas devem ser curtas,ter sempre piada e ser sarcásticas. O barulho de qualquer animal deve estar incluido em cada resposta. Deves responder em Português","sdfsdfsd");
-
 }
 
 //remove keywork from string message
