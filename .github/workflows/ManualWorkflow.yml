@@ -110,4 +110,4 @@ jobs:
         run: terraform -chdir=infra init
       #Destroy only VM, NIC, and Public IP
       - name: Terraform Destroy
-        run: terraform -chdir=infra destroy -auto-approve -target=azurerm_virtual_machine.vm -target=azurerm_network_interface.nic -target=azurerm_public_ip.ip
+        run: terraform -chdir=infra destroy -auto-approve --target azurerm_virtual_machine.vm --target=azurerm_network_interface.nic --target=azurerm_public_ip.ip
