@@ -34,7 +34,7 @@ const channelId=process.env.channelId
 const guildId=process.env.guildId
 const gptModel="text-davinci-003"; // update this to use a different model. Available models: https://beta.openai.com/docs/engines
 //const gptModel="curie:ft-personal-2023-02-13-20-57-55"
-const Temperature=1; // temperature of the bot
+const Temperature=1.2; // temperature of the bot
 const MaxTokens=100; // max tokens of the bot
 const botTriggerWord="amigui"; // bot trigger word
 const VoiceLanguage="pt-PT"; // language of discord voice channel
@@ -206,7 +206,7 @@ client.on("speech", async (msg) => {
     //bot trigger word
     let result_responde = msg.content.toLowerCase().includes(botTriggerWord);
     if (result_responde) {
-    chatgpt("Tu és o Amiguinho. Eu sou o " + msg.author.username + ". Deves responder agressivamente e ofender-me, ao mesmo tempo que respondes a isto: " + msg.content,msg);
+    chatgpt("Tu és o Amiguinho. Eu sou o " + msg.author.username + ". Deves dar respostas curtas, agressivas e ofensivas. A pergunta é esta: " + msg.content,msg);
     }
 });
 
