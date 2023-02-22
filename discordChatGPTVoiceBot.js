@@ -25,6 +25,7 @@ const { createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
 var fs = require('fs');
 const { Configuration, OpenAIApi } = require("openai");
 const gTTS = require('gtts');
+const { count } = require('console');
 require('dotenv').config()
 
 // take this value as script argument
@@ -149,6 +150,7 @@ saveTextFile(res.text,fileName);
 
 //wait until file is created
 if   (fs.existsSync(fileName)) {console.log("sdf");return;}
+    count=0;
     while (!fs.existsSync(fileName)) {
     console.log("waiting for file to be created.");
     await sleep_func(100);
