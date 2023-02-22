@@ -146,12 +146,18 @@ console.log("ChatGPT response:" + res.text)
 //msg.channel.send(res.text);
 var fileName = "tmp/" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + ".mp3";
 saveTextFile(res.text,fileName);
-//wait 2 seconds
+
 //wait until file is created
 if   (fs.existsSync(fileName)) {console.log("sdf");return;}
     while (!fs.existsSync(fileName)) {
     console.log("waiting for file to be created.");
-    await sleep_func(1000);
+    await sleep_func(100);
+    
+    //exit if file is not created after 4 seconds
+    if (count > 40) { console.log("file not created.");
+         return;}
+    count++;
+
 }
     connection1(fileName);
 }
