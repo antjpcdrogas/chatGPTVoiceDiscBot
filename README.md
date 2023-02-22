@@ -22,8 +22,15 @@ $ npm install --save chatgptvoicediscbot
 var chatgptvoicediscbot = require("chatgptvoicediscbot");
 chatgptvoicediscbot();
 node discordChatGPTVoiceBot.js
-```
 
+Environment variables:
+- BOT_TOKEN
+- OPENAI_API_KEY
+- botDiscId
+- channelId
+- guildId
+```
+ 
 ## Credits
 
 - [includez](https://github.com/include) for sponsoring GitHub co-pilot :D
