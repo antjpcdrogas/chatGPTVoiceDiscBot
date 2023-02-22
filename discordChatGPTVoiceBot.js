@@ -136,7 +136,7 @@ const completion = await openai.createCompletion({
     //frequencyPenalty: 0,
     //bestOf: 1,
     //n: 1,
-    //stop:["\n"]
+    stop:["\n"]
 });
 //
     
