@@ -206,7 +206,7 @@ client.on("speech", async (msg) => {
     //bot trigger word
     let result_responde = msg.content.toLowerCase().includes(botTriggerWord);
     if (result_responde) {
-    chatgpt("Sou o " + msg.author.username + ". Incluindo sons de animais, responde-me de uma maneira curta mas extremamente sarcástica e alegre a isto: " + msg.content,msg);
+    chatgpt("Tu és o Amiguinho. Eu sou o " + msg.author.username + ". Incluindo sons de animais e o meu nome na resposta, diz-me de uma maneira curta e extremamente irónica a isto: " + msg.content,msg);
     }
 });
 
