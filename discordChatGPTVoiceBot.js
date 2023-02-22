@@ -72,7 +72,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             selfMute: false
         });
         console.log(newState.member);
-        chatgpt("O membro" + newState.member.user.username + " acabou de chegar, dá-lhe as boas vindas energeticamente e termina a resposta a miar.","False");
+        chatgpt("O " + newState.member.user.username + " acabou de chegar, dá-lhe as boas vindas energeticamente e termina a resposta a miar.","False");
     }
 });
 addSpeechEvent(client, { lang: VoiceLanguage ,
