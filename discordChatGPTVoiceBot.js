@@ -194,8 +194,6 @@ client.on("speech", async (msg) => {
             fs.unlinkSync("tmp/"+file);
             
         });
-            //delete all files in tmp folder
-            chatgpt("Informa que limpaste a pasta temporária.","False");
     }
     if (!msg.content) return;
     var currentdate = new Date();
