@@ -127,7 +127,7 @@ async function chatgpt(message,msg){
 
 const completion = await openai.createCompletion({
     model: gptModel,
-    prompt: "Sou o " + msg.member.user.username + ". Incluindo sons de animais, responde de uma maneira curta mas extremamente sarcástica e alegre a isto: " + message + ". \n",
+    prompt: message + ". \n",
 
     max_tokens: MaxTokens,
     temperature: Temperature,
@@ -206,7 +206,7 @@ client.on("speech", async (msg) => {
     //bot trigger word
     let result_responde = msg.content.toLowerCase().includes(botTriggerWord);
     if (result_responde) {
-    chatgpt(msg.content,msg);
+    chatgpt("Sou o " + msg.author.username + ". Incluindo sons de animais, responde-me de uma maneira curta mas extremamente sarcástica e alegre a isto: " + msg.content,msg);
     }
 });
 
