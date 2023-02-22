@@ -34,7 +34,7 @@ const channelId=process.env.channelId
 const guildId=process.env.guildId
 const gptModel="text-davinci-003"; // update this to use a different model. Available models: https://beta.openai.com/docs/engines
 //const gptModel="curie:ft-personal-2023-02-13-20-57-55"
-const Temperature=0.5; // temperature of the bot
+const Temperature=1; // temperature of the bot
 const MaxTokens=100; // max tokens of the bot
 const botTriggerWord="amigui"; // bot trigger word
 const VoiceLanguage="pt-PT"; // language of discord voice channel
@@ -71,7 +71,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             selfMute: false
         });
         console.log(newState.member);
-        chatgpt("A player named" + newState.member.user.username + " just joined the voice channel, greet him energetically!",newState.member.channel );
+        chatgpt("O membro" + newState.member.user.username + " acabou de chegar, dá-lhe as boas vindas energeticamente e termina a resposta a miar.",newState.member.channel );
     }
 });
 addSpeechEvent(client, { lang: VoiceLanguage ,
@@ -108,7 +108,7 @@ async function chatgpt_start(){
         selfDeaf: false,
         selfMute: false
     })
-    chatgpt("Deseja felicidades a todos os membros do canal, com bastante energia!","sdfsdfsd");
+    chatgpt("Acabaste de resuscitar, diz o quanto agradecido estás por estares vivo novamentes","sdfsdfsd");
 }
 
 
@@ -206,7 +206,7 @@ client.on("speech", async (msg) => {
     //bot trigger word
     let result_responde = msg.content.toLowerCase().includes(botTriggerWord);
     if (result_responde) {
-    chatgpt("Tu és o Amiguinho. Eu sou o " + msg.author.username + ". Incluindo sons de animais e o meu nome na resposta, diz-me de uma maneira curta e extremamente irónica a isto: " + msg.content,msg);
+    chatgpt("Tu és o Amiguinho. Eu sou o " + msg.author.username + ". Deves responder agressivamente e ofender-me, ao mesmo tempo que respondes a isto: " + msg.content,msg);
     }
 });
 
