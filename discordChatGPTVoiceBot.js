@@ -127,7 +127,7 @@ async function chatgpt(message,msg){
 
 const completion = await openai.createCompletion({
     model: gptModel,
-    prompt: "Sou o " + msg.member.user.username + ". Responde de uma maneira extremamente sarcástica e alegre a isto: " + message + ". \n",
+    prompt: "Sou o " + msg.member.user.username + ". Incluindo sons de animais, responde de uma maneira curta mas extremamente sarcástica e alegre a isto: " + message + ". \n",
 
     max_tokens: MaxTokens,
     temperature: Temperature,
