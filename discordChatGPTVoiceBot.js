@@ -39,7 +39,7 @@ const Temperature=1.2; // temperature of the bot
 const MaxTokens=100; // max tokens of the bot
 const botTriggerWord="amigui"; // bot trigger word
 const VoiceLanguage="pt-PT"; // language of discord voice channel
-gTTSLanguage="pt-PT"; // language of the bot
+gTTSLanguage="pt"; // language of the bot
 const volume=0.5;
 const player = createAudioPlayer();
 const client = new Client({
@@ -84,7 +84,7 @@ profanityFilter: false,
   var fileName = "tmp/" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + ".mp3";
     try
     {
-    var gtts = new gTTS(textToSpeak, gTTSLanguage);
+    var gtts = new gTTS(textToSpeak, gTTSLanguage,tld='pt');
 
     gtts.save(fileName, function (err, result) {
      
