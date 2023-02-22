@@ -72,21 +72,30 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             selfMute: false
         });
         console.log(newState.member);
-        chatgpt("O membro" + newState.member.user.username + " acabou de chegar, dá-lhe as boas vindas energeticamente e termina a resposta a miar.",newState.member.channel );
+        chatgpt("O membro" + newState.member.user.username + " acabou de chegar, dá-lhe as boas vindas energeticamente e termina a resposta a miar.","False");
     }
 });
 addSpeechEvent(client, { lang: VoiceLanguage ,
 profanityFilter: false,
 });
-async function saveTextFile(textToSpeak,finalName) {
+
+
+ function saveTextFile(textToSpeak,callback) {
+  var fileName = "tmp/" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + ".mp3";
     try
     {
     var gtts = new gTTS(textToSpeak, gTTSLanguage);
 
-    gtts.save(finalName, function (err, result) {
+    gtts.save(fileName, function (err, result) {
+     
         if(err) { throw new Error(err) }
         console.log('Audio file saved.');
+        
+      
+        callback(fileName);
     }); 
+    
+
     }
     catch(err)
     {
@@ -109,7 +118,7 @@ async function chatgpt_start(){
         selfDeaf: false,
         selfMute: false
     })
-    chatgpt("Acabaste de resuscitar, diz o quanto agradecido estás por estares vivo novamentes","sdfsdfsd");
+    chatgpt("Acabaste de resuscitar e entraste num canal de voz. Mostra o teu agradecimento aos restantes membros do canal.","False");
 }
 
 
@@ -137,36 +146,23 @@ const completion = await openai.createCompletion({
     //frequencyPenalty: 0,
     //bestOf: 1,
     //n: 1,
-    stop:["\n"]
+    //stop:["\n"]
 });
 //
     
 console.log(completion.data.usage)
 res=completion.data.choices[0];
 console.log("ChatGPT response:" + res.text)
-//msg.channel.send(res.text);
-var fileName = "tmp/" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + ".mp3";
-saveTextFile(res.text,fileName);
-
-//wait until file is created
-if   (fs.existsSync(fileName)) {console.log("sdf");return;}
-    count=0;
-    while (!fs.existsSync(fileName)) {
-    console.log("waiting for file to be created.");
-    await sleep_func(100);
-    
-    //exit if file is not created after 4 seconds
-    if (count > 40) { console.log("file not created.");
-         return;}
-    count++;
-
-}
-    connection1(fileName);
+if (msg!="False"){
+    msg.channel.send(res.text);
 }
 
+saveTextFile(res.text,connection1);
 
-async function connection1(filename) {
-    const currentguild = await client.guilds.fetch(guildId);
+}
+
+ function connection1(filename) {
+    const currentguild =  client.guilds.fetch(guildId);
         connection = joinVoiceChannel({
             channelId: channelId,
             guildId: guildId,
@@ -230,7 +226,7 @@ console.log('Starting up...');
     //get client username
     console.log('Logged in as ' + client.user.username + ' - (' + client.user.id + ')');
     console.log("joining channel...");
-    await chatgpt_start();
+    chatgpt_start();
     console.log("Ready to go!");
     console.log("--------------------------------------------------")
     
