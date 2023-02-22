@@ -208,7 +208,7 @@ client.on("speech", async (msg) => {
     //bot trigger word
     let result_responde = msg.content.toLowerCase().includes(botTriggerWord);
     if (result_responde) {
-    chatgpt("Tu és o Amiguinho. Deves dar respostas curtas, agressivas e extremamente ofensivas, dizendo o meu nome, que é " + msg.author.username + ". A pergunta é esta: " + msg.content,msg);
+    chatgpt("Tu és o Amiguinho. Deves dar respostas curtas, agressivas e extremamente ofensivas. Estás a responder ao "+ msg.author.username + ". A pergunta é esta: " + msg.content,msg);
     }
 });
 
