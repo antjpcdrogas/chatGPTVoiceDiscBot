@@ -184,18 +184,18 @@ saveTextFile(res.text,connection1);
 client.on("speech", async (msg) => { 
     // If bot didn't recognize speech, content will be empty
     //count number of files inside tmp folder
-    var count = 0;
+    var count_tmp = 0;
     fs.readdirSync("tmp").forEach(file => {
-        count++;
+        count_tmp++;
     });
-    if (count > 10) {
+    if (count_tmp > 10) {
         console.log("Cleaning up tmp folder...")
         fs.readdirSync("tmp").forEach(file => {
             fs.unlinkSync("tmp/"+file);
             
         });
             //delete all files in tmp folder
-            chatgpt("Informa que já limpaste a pasta temporária.","sdfsdfsd");
+            chatgpt("Informa que limpaste a pasta temporária.","False");
     }
     if (!msg.content) return;
     var currentdate = new Date();
@@ -210,7 +210,7 @@ client.on("speech", async (msg) => {
     //bot trigger word
     let result_responde = msg.content.toLowerCase().includes(botTriggerWord);
     if (result_responde) {
-    chatgpt("Tu és o Amiguinho. Eu sou o " + msg.author.username + ". Deves dar respostas curtas, agressivas e ofensivas. A pergunta é esta: " + msg.content,msg);
+    chatgpt("Tu és o Amiguinho. Deves dar respostas curtas, agressivas e extremamente ofensivas, dizendo o meu nome, que é " + msg.author.username + ". A pergunta é esta: " + msg.content,msg);
     }
 });
 
