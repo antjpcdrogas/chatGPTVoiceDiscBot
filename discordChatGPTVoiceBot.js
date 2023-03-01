@@ -33,7 +33,7 @@ require('dotenv').config()
 const botDiscId=process.env.botDiscId
 const channelId=process.env.channelId
 const guildId=process.env.guildId
-const gptModel="text-davinci-003"; // update this to use a different model. Available models: https://beta.openai.com/docs/engines
+const gptModel="gpt-3.5-turbo"; // update this to use a different model. Available models: https://beta.openai.com/docs/engines
 //const gptModel="curie:ft-personal-2023-02-13-20-57-55"
 const Temperature=1; // temperature of the bot
 const MaxTokens=100; // max tokens of the bot
