@@ -35,7 +35,7 @@ const channelId=process.env.channelId
 const guildId=process.env.guildId
 const gptModel="gpt-3.5-turbo"; // update this to use a different model. Available models: https://beta.openai.com/docs/engines
 //const gptModel="curie:ft-personal-2023-02-13-20-57-55"
-const Temperature=1; // temperature of the bot
+const Temperature=1.3; // temperature of the bot
 const MaxTokens=100; // max tokens of the bot
 const botTriggerWord="amigui"; // bot trigger word
 const VoiceLanguage="pt-PT"; // language of discord voice channel
@@ -72,7 +72,10 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             selfMute: false
         });
         console.log(newState.member);
-        chatgpt("O " + newState.member.user.username + " acabou de chegar, dá-lhe as boas vindas energeticamente e termina a resposta a miar.","False");
+
+
+        chatgpt({"role": "system", "content": "O " + newState.member.user.username + " acabou de chegar, dá-lhe as boas vindas a miar." + ". \n"},"False");
+
     }
 });
 addSpeechEvent(client, { lang: VoiceLanguage ,
@@ -118,7 +121,7 @@ async function chatgpt_start(){
         selfDeaf: false,
         selfMute: false
     })
-    chatgpt("Acabaste de resuscitar e entraste num canal de voz. Mostra o teu agradecimento aos restantes membros do canal.","False");
+    chatgpt({"role": "system", "content": "Anuncia a todos que voltaste com mais força que nunca." + ". \n"},"False");
 }
 
 
@@ -133,12 +136,16 @@ function removeKeyword(message,keyword){
 }
 
 async function chatgpt(message,msg){
-    console.log("ChatGPT request:" + message)
+    console.log("ChatGPT request:" + message.content)
 
-const completion = await openai.createCompletion({
+const completion = await openai.createChatCompletion({
     model: gptModel,
-    prompt: message + ". \n",
-
+    //prompt: message + ". \n",
+    messages:[
+        {"role": "system", "content": "Tu és o Amiguinho. Deves dar respostas curtas, agressivas e extremamente ofensivas. Deves agir como se fosses Deus que tenta ser engraçado.\n"},
+        message,
+        
+    ],
     max_tokens: MaxTokens,
     temperature: Temperature,
     //suffix: " ->",
@@ -151,13 +158,13 @@ const completion = await openai.createCompletion({
 //
     
 console.log(completion.data.usage)
-res=completion.data.choices[0];
-console.log("ChatGPT response:" + res.text)
+res=completion.data.choices[0].message.content;
+console.log("ChatGPT response:" + res)
 if (msg!="False"){
-    msg.channel.send(res.text);
+    msg.channel.send(res);
 }
 
-saveTextFile(res.text,connection1);
+saveTextFile(res,connection1);
 
 }
 
@@ -208,7 +215,7 @@ client.on("speech", async (msg) => {
     //bot trigger word
     let result_responde = msg.content.toLowerCase().includes(botTriggerWord);
     if (result_responde) {
-    chatgpt("Tu és o Amiguinho. Deves dar respostas curtas, agressivas e extremamente ofensivas. Estás a responder ao "+ msg.author.username + ". A pergunta é esta: " + msg.content,msg);
+    chatgpt({"role": "user", "content": msg.content + ". \n"},msg);
     }
 });
 
