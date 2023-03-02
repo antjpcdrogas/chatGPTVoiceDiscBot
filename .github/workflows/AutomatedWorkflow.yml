@@ -36,7 +36,7 @@ jobs:
         id: extract
         run: echo "::set-output name=value::$(echo ${{ github.event.head_commit.message }} | grep -oP '\[(.*?)\]' | tr -d '[]')"
       - name: Use extracted value in another task
-        run: echo "Extracted value: ${{ steps.extract.outputs.value }}"
+        run: echo "Extracted value ${{ steps.extract.outputs.value }}"
       - uses: actions/checkout@v2
         with:
           ref: ${{ steps.extract.outputs.value }}
