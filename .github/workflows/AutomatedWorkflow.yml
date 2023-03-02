@@ -12,6 +12,16 @@ env:
   botDiscId: ${{secrets.NODE_DISC_BOT_ID}}
   channelId: ${{secrets.NODE_DISC_CHANNEL_ID}}
   guildId: ${{secrets.NODE_DISC_GUILD_ID}}
+  commitMessage: ${{ github.event.head_commit.message }}
+  extract version from commit message
+
+
+
+  #get all tag names from this repository using git api
+
+
+
+
 
 on:
   push:
@@ -20,15 +30,14 @@ on:
     paths:
       - "discordChatGPTVoiceBot.js"
 
-#workflow_dispatch:
-#  inputs:
-#    name:
-#      type: choice
-#      description: "What do you want to do?"
-#      options:
-#        - CreateAll
-#        - DestroyAll
 
+
+workflow_dispatch:
+  inputs:
+    choice:
+      description: 'DestroyAll'
+      required: true
+      default: GET /repos/:owner/:repo/git/matching-refs/tags
 permissions:
   contents: read
   packages: write
@@ -36,7 +45,13 @@ jobs:
   buildImage:
     runs-on: ubuntu-latest
     steps:
+    #checkout from tag v1.1
+
       - uses: actions/checkout@v2
+        with:
+          ref: v1.1
+
+      
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v1
         with:
