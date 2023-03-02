@@ -261,6 +261,7 @@ client.on('messageCreate', message => { // when there is a message sent
     }
 
 
+    
 
    /* if (message.content === "!status") {
         // msg is equal to the message content without !status keywork
