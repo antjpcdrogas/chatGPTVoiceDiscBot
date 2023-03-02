@@ -30,6 +30,7 @@ require('dotenv').config()
 
 // take this value as script argument
 
+
 const botDiscId=process.env.botDiscId
 const channelId=process.env.channelId
 const guildId=process.env.guildId
