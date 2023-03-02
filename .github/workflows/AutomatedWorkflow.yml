@@ -31,7 +31,6 @@ jobs:
   buildImage:
     runs-on: ubuntu-latest
     steps:
-    #checkout from tag v1.1
       - name: Extract value from last commit message
         id: extract
         run: echo "::set-output name=value::$(echo ${{ github.event.head_commit.message }} | grep -oP '\[(.*?)\]' | tr -d '[]')"
@@ -44,7 +43,7 @@ jobs:
           ref: ${{ steps.extract.outputs.value }}
 
       - name: Generate package.json
-      run: |
+        run: |
         TAG=${GITHUB_REF#refs/tags/}
         sed -i "s/\TAG/$TAG/g" package.json
         cat package.json
