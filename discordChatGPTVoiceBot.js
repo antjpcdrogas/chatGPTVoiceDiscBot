@@ -255,6 +255,11 @@ client.on('messageCreate', message => { // when there is a message sent
         chatgpt_start();
         console.log("Connected to voice channel.");
     }
+    if (message.content.toLowerCase().includes("!version")) { 
+        console.log("Connecting to voice channel...");
+        chatgpt("1.1","False");
+
+    }
 
 
    /* if (message.content === "!status") {
