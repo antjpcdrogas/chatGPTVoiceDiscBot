@@ -260,6 +260,7 @@ client.on('messageCreate', message => { // when there is a message sent
         console.log("Connected to voice channel.");
     }
 
+    
 
    /* if (message.content === "!status") {
         // msg is equal to the message content without !status keywork
