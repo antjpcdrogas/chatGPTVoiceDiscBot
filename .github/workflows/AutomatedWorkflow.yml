@@ -45,7 +45,7 @@ jobs:
       - name: Generate package.json
         run: |
             TAG=${GITHUB_REF#refs/tags/}
-            sed -i s/TAG/$TAG/g package.json
+            sed -i s@TAG@$TAG@g package.json
             cat package.json
 
       - name: Login to GitHub Container Registry

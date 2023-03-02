@@ -252,7 +252,6 @@ client.on('messageCreate', message => { // when there is a message sent
         connection.destroy();
         console.log("Disconnected from voice channel.");
     }
-
     //connect to 
     if (message.content.toLowerCase().includes("!start")) { 
         console.log("Connecting to voice channel...");
@@ -264,7 +263,7 @@ client.on('messageCreate', message => { // when there is a message sent
         chatgpt({"role": "user", "content": "1.1" + ". \n"},"False");
     }
 
-    
+
    /* if (message.content === "!status") {
         // msg is equal to the message content without !status keywork
         msg=removeKeyword(message.content,"!status");
