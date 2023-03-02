@@ -59,6 +59,7 @@ player.on(AudioPlayerStatus.Playing, () => {
     console.log('The audio player has started playing!');
 });
 
+
 client.on('voiceStateUpdate', async (oldState, newState) => {
     //console.log(oldState, newState);
     // do nothing if the user is the bot id
