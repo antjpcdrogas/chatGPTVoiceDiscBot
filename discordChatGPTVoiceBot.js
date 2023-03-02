@@ -31,6 +31,7 @@ const VERSION = VERSION_TO_BE_REPLACED
 // take this value as script argument
 
 
+
 const botDiscId=process.env.botDiscId
 const channelId=process.env.channelId
 const guildId=process.env.guildId

@@ -45,7 +45,7 @@ jobs:
         run: |
             TAG=${{ steps.extract.outputs.value }}
             sed -i s@TAG@$TAG@g package.json
-            sed -i s@VERSION_TO_BE_REPLACED@${{ steps.extract.outputs.value }}@g package.json
+            sed -i s@VERSION_TO_BE_REPLACED@${{ steps.extract.outputs.value }}@g discordChatGPTVoiceBot.js
             cat package.json
 
       - name: Login to GitHub Container Registry
