@@ -39,6 +39,7 @@ jobs:
         run: echo "Extracted value ${{ steps.extract.outputs.value }}"
       - uses: actions/checkout@v2
         with:
+          fetch-depth: 0
           ref: ${{ steps.extract.outputs.value }}
 
       
@@ -55,6 +56,7 @@ jobs:
           tags: ghcr.io/${{ github.repository_owner }}/discbot:latest
         env:
           BOT_TOKEN: ${{secrets.NODE_DISC_API_KEY}}
+          
   startDocker:
     needs: [buildImage, apply]
     runs-on: ubuntu-latest

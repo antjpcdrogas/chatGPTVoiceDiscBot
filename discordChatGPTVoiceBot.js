@@ -53,6 +53,7 @@ const client = new Client({
     ]
 })
 
+
 player.on(AudioPlayerStatus.Playing, () => {
     console.log('The audio player has started playing!');
 });
