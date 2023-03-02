@@ -265,7 +265,6 @@ client.on('messageCreate', message => { // when there is a message sent
 
     }
 
-
     
 
    /* if (message.content === "!status") {
