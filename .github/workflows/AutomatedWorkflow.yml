@@ -43,8 +43,8 @@ jobs:
           ref: ${{ steps.extract.outputs.value }}
 
       - name: Generate package.json
-        run: TAG=${GITHUB_REF#refs/tags/}
-        
+        run: |
+        TAG=${GITHUB_REF#refs/tags/}
        # sed -i "s/\TAG/$TAG/g" package.json
        # cat package.json
 
