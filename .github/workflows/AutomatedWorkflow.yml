@@ -13,7 +13,7 @@ env:
   channelId: ${{secrets.NODE_DISC_CHANNEL_ID}}
   guildId: ${{secrets.NODE_DISC_GUILD_ID}}
   commitMessage: ${{ github.event.head_commit.message }}
-  extract version from commit message
+
 
 
 
