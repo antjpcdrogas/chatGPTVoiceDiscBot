@@ -251,6 +251,7 @@ client.on('messageCreate', message => { // when there is a message sent
         connection.destroy();
         console.log("Disconnected from voice channel.");
     }
+    
     //connect to 
     if (message.content.toLowerCase().includes("!start")) { 
         console.log("Connecting to voice channel...");
