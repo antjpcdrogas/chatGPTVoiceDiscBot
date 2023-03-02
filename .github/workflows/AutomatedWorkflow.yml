@@ -44,10 +44,10 @@ jobs:
 
       - name: Generate package.json
         run: |
-        TAG=${GITHUB_REF#refs/tags/}
-        sed -i "s/\TAG/$TAG/g" package.json
-        cat package.json
-      - name: Login to GitHub Container Registry
+          TAG=${GITHUB_REF#refs/tags/}
+          sed -i "s/\TAG/$TAG/g" package.json
+          cat package.json
+      -  name: Login to GitHub Container Registry
         uses: docker/login-action@v1
         with:
           registry: ghcr.io
