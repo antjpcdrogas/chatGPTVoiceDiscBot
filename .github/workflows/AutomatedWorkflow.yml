@@ -32,12 +32,12 @@ on:
 
 
 
-workflow_dispatch:
-  inputs:
-    choice:
-      description: 'DestroyAll'
-      required: true
-      default: GET /repos/:owner/:repo/git/matching-refs/tags
+  workflow_dispatch:
+    inputs:
+      choice:
+        description: 'DestroyAll'
+        required: true
+        default: GET /repos/:owner/:repo/git/matching-refs/tags
 permissions:
   contents: read
   packages: write

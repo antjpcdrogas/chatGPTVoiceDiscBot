@@ -220,6 +220,7 @@ client.on("speech", async (msg) => {
 });
 
 
+
 client.on('ready', async() => {
 console.log('Starting up...');
     //delete all files in tmp folder
@@ -235,7 +236,7 @@ console.log('Starting up...');
     console.log("Ready to go!");
     console.log("--------------------------------------------------")
     
-    
+
 }
 );
 //check if someone jointed channel
