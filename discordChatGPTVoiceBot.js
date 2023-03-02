@@ -121,7 +121,7 @@ async function chatgpt_start(){
         selfDeaf: false,
         selfMute: false
     })
-    chatgpt({"role": "system", "content": "Anuncia a todos que voltaste com mais força que nunca." + ". \n"},"False");
+    chatgpt({"role": "system", "content": "Anuncia a todos que voltaste com mais força que nunca. Especifica claramente que estas na versão 1.1 ." + ". \n"},"False");
 }
 
 
