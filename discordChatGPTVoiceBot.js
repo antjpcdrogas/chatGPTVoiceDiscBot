@@ -123,7 +123,7 @@ async function chatgpt_start(){
         selfDeaf: false,
         selfMute: false
     })
-    chatgpt({"role": "system", "content": "Anuncia a todos que voltaste com mais força que nunca." + ". \n"},"False");
+    chatgpt({"role": "system", "content": "Anuncia a todos que voltaste com mais força que nunca. Especifica claramente que estas na versão 1.1 ." + ". \n"},"False");
 }
 
 
@@ -258,6 +258,11 @@ client.on('messageCreate', message => { // when there is a message sent
         console.log("Connecting to voice channel...");
         chatgpt_start();
         console.log("Connected to voice channel.");
+    }
+    if (message.content.toLowerCase().includes("!version")) { 
+        console.log("Connecting to voice channel...");
+        chatgpt("1.1","False");
+
     }
 
 
