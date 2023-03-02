@@ -27,7 +27,7 @@ const { Configuration, OpenAIApi } = require("openai");
 const gTTS = require('gtts');
 const { count } = require('console');
 require('dotenv').config()
-const VERSION = VERSION_TO_BE_REPLACED
+const VERSION = "VERSION_TO_BE_REPLACED"
 // take this value as script argument
 
 
@@ -260,8 +260,8 @@ client.on('messageCreate', message => { // when there is a message sent
         console.log("Connected to voice channel.");
     }
     if (message.content.toLowerCase().includes("!version")) { 
-        message.channel.send("v1.1.6")
-        chatgpt({"role": "user", "content": "1.1.6" + ". \n"},"False");
+        message.channel.send(VERSION)
+        chatgpt({"role": "user", "content": VERSION + ". \n"},"False");
     }
 
    /* if (message.content === "!status") {
