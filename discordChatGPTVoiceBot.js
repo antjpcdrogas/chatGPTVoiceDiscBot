@@ -245,7 +245,6 @@ console.log('Starting up...');
 //check if someone jointed channel
 client.on('messageCreate', message => { // when there is a message sent
 
-
     //disconnect from voice channel
     if (message.content.toLowerCase().includes("!stop")) {
         console.log("Disconnecting from voice channel...");
