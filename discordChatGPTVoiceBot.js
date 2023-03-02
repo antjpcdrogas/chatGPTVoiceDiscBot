@@ -235,6 +235,7 @@ console.log('Starting up...');
     console.log("Ready to go!");
     console.log("--------------------------------------------------")
     
+    
 }
 );
 //check if someone jointed channel
