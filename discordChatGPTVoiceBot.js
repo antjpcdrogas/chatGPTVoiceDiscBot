@@ -267,7 +267,6 @@ console.log('Package version: ' + VERSION);
 
     console.log("--------------------------------------------------")
     
-
 }
 );
 //check if someone jointed channel
