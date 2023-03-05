@@ -127,7 +127,7 @@ async function chatgpt_start(){
         selfDeaf: false,
         selfMute: false
     })
-    chatgpt({"role": "system", "content": "Anuncia a todos que voltaste com mais força que nunca. Especifica claramente que estas na versão 1.1 ." + ". \n"},"False");
+    chatgpt({"role": "system", "content": "Anuncia a todos que renasceste das cinzas quando já ninguem contava com o teu retorno. Vais mostrar a tua ira e sede de vingança." + ". \n"},"False");
 }
 
 
@@ -226,7 +226,7 @@ client.on("speech", async (msg) => {
     }
 });
 
-function to get current datetime
+
 function getDateTime() {
 
     var date = new Date();
