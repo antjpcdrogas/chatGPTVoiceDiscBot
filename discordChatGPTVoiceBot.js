@@ -113,6 +113,7 @@ profanityFilter: false,
     }
     }
      
+    
 async function chatgpt_start(){
     console.log("Starting bot...")
         const configuration = new Configuration({ //TODO: add fine-tuning and custom model
