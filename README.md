@@ -3,11 +3,18 @@
 > Discord bot that uses chatGPT under the hood. Written in NodeJS.Prompts and answers using voice with google text-to-speech(gTTS), OpenAI and Discord.
 > This is my first nodeJS attempt, only possible because of GitHub co-pilot.
 
+
+>There is a bug in discord.js/voice, the issue is described here:
+>https://github.com/discordjs/discord.js/issues/8482
+
+The issue happens in all OS, not only WSL2. The proposed fix is already implemented in the node_module folder located in this repo.
 ## Installation
 
 ```sh
 $ npm install --save chatgptvoicediscbot
 ```
+
+
 
 ## Features
 
