@@ -287,7 +287,6 @@ client.on('messageCreate', message => { // when there is a message sent
     }
     if (message.content.toLowerCase().includes("!version")) { 
         message.channel.send(VERSION)
-        chatgpt({"role": "user", "content": VERSION + ". \n"},"False");
     }
 
    /* if (message.content === "!status") {
