@@ -33,6 +33,7 @@ const versiona = process.env.npm_package_config_version;
 
 
 
+
 const botDiscId=process.env.botDiscId
 const channelId=process.env.channelId
 const guildId=process.env.guildId
