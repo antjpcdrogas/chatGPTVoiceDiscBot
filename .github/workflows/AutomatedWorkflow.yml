@@ -43,7 +43,6 @@ jobs:
 
       - name: Generate package.json
         run: |
-            //check if extracted value is empty
             if [ -z "${{ steps.extract.outputs.value }}" ]; then
               echo "No tag found in commit message"
               exit 1
