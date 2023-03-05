@@ -27,7 +27,7 @@ const { Configuration, OpenAIApi } = require("openai");
 const gTTS = require('gtts');
 const { count } = require('console');
 require('dotenv').config()
-const VERSION = process.env.npm_package_version;
+const VERSION = process.env.npm_package_config_version;
 // take this value as script argument
 
 
@@ -148,7 +148,7 @@ const completion = await openai.createChatCompletion({
     model: gptModel,
     //prompt: message + ". \n",
     messages:[
-        {"role": "system", "content": "Tu és o Amiguinho. Deves dar respostas curtas, agressivas e extremamente ofensivas. Deves agir como se fosses Deus que tenta ser engraçado.\n"},
+        {"role": "system", "content": "O teu nome é Amiguinho. Quando algo falar em Amiguinho, estão a falar de ti. Deves dar respostas curtas, agressivas e extremamente ofensivas. Deves agir como se fosses Deus que tenta ser engraçado.\n"},
         message,
         
     ],

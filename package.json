@@ -31,6 +31,11 @@
     "Virtual",
     "assistant"
   ],
+  "config":{
+    "version": "TAG"
+
+
+  },
   "author": "Quskia",
   "license": "ISC",
   "bugs": {
