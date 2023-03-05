@@ -19,8 +19,6 @@ on:
   push:
     branches: ["main"]
     # if change in file discordChatGPTVoice.js
-    paths:
-      - "discordChatGPTVoiceBot.js"
 
 
 
