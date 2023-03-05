@@ -27,9 +27,9 @@ const { Configuration, OpenAIApi } = require("openai");
 const gTTS = require('gtts');
 const { count } = require('console');
 require('dotenv').config()
-const VERSION = "VERSION_TO_BE_REPLACED"
+const VERSION = process.env.npm_package_version;
 // take this value as script argument
-
+const versiona = process.env.npm_package_config_version;
 
 
 
@@ -229,6 +229,7 @@ client.on("speech", async (msg) => {
 
 client.on('ready', async() => {
 console.log('Starting up...');
+console.log('Package version: ' + versiona);
     //delete all files in tmp folder
     console.log('Cleaning up tmp folder...')
     fs.readdirSync("tmp").forEach(file => {
@@ -240,6 +241,7 @@ console.log('Starting up...');
     console.log("joining channel...");
     chatgpt_start();
     console.log("Ready to go!");
+
     console.log("--------------------------------------------------")
     
 

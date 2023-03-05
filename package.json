@@ -1,6 +1,6 @@
 {
   "name": "chatgptvoicediscbot",
-  "version": "1.0.0",
+  "version": "TAG",
   "description": "Discord bot that uses chatGPT under the hood. Prompts and answers using voice with(gTTS)",
   "main": "discordChatGPTVoiceBot.js",
   "dependencies": {
