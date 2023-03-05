@@ -29,7 +29,6 @@ const { count } = require('console');
 require('dotenv').config()
 const VERSION = process.env.npm_package_version;
 // take this value as script argument
-const versiona = process.env.npm_package_config_version;
 
 
 
@@ -113,7 +112,7 @@ profanityFilter: false,
     }
     }
      
-    
+
 async function chatgpt_start(){
     console.log("Starting bot...")
         const configuration = new Configuration({ //TODO: add fine-tuning and custom model
@@ -231,7 +230,7 @@ client.on("speech", async (msg) => {
 
 client.on('ready', async() => {
 console.log('Starting up...');
-console.log('Package version: ' + versiona);
+console.log('Package version: ' + version);
     //delete all files in tmp folder
     console.log('Cleaning up tmp folder...')
     fs.readdirSync("tmp").forEach(file => {
