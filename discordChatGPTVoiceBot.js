@@ -175,7 +175,7 @@ async function triggerRandomly() {
         console.log(member.user.username);
         
         console.log('Random trigger!');
-       chatgpt({"role": "system", "content": "Canta uma serenata onde demonstras o teu amor infinito pelo + "+ member.user.username + " em 10 palavras. Acaba a miar. \n"},"False");
+       chatgpt({"role": "system", "content": "Interage com o membro + "+ member.user.username + " como se ele fosse um gato, em 10 palavras. Acaba a miar. \n"},"False");
       }
     }
     }, intervalInMilliseconds);
