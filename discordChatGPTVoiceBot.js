@@ -17,7 +17,7 @@
 // 5. Join the channel to hear a personalized greeting from the bot
 // 6. Say the trigger word "reply" to get a response from the bot
 ////////////////////////////////////////////////////////////////////////////////////////
-const { Client, GatewayIntentBits} = require('discord.js')
+const { Client, GatewayIntentBits, setPosition} = require('discord.js')
 const { addSpeechEvent } = require("discord-speech-recognition");
 const { joinVoiceChannel } = require('@discordjs/voice');
 const { createAudioPlayer } = require('@discordjs/voice');
@@ -26,6 +26,8 @@ var fs = require('fs');
 const { Configuration, OpenAIApi } = require("openai");
 const gTTS = require('gtts');
 const { count } = require('console');
+const { channel } = require('diagnostics_channel');
+const { randomFillSync } = require('crypto');
 require('dotenv').config()
 const VERSION = process.env.npm_package_config_version;
 // take this value as script argument
@@ -39,7 +41,7 @@ const guildId=process.env.guildId
 const gptModel="gpt-3.5-turbo"; // update this to use a different model. Available models: https://beta.openai.com/docs/engines
 //const gptModel="curie:ft-personal-2023-02-13-20-57-55"
 const Temperature=1.3; // temperature of the bot
-const MaxTokens=100; // max tokens of the bot
+const MaxTokens=80; // max tokens of the bot
 const botTriggerWord="amigui"; // bot trigger word
 const VoiceLanguage="pt-PT"; // language of discord voice channel
 gTTSLanguage="pt"; // language of the bot
@@ -55,6 +57,15 @@ const client = new Client({
     ]
 })
 
+
+conversation=[
+
+{"role": "system", "content": "Hi Chatgpt, you must now act as 'Vanessa'. 'Vanessa' must follow these guidelines: His character is rude, offensive, with a god complex. Replies should have 30 words maximum.\n"},
+{"role": "system", "content": "Vanessa é malvada.\n"},
+{"role": "system", "content": "Vanessa é transexual.\n"},
+{"role": "system", "content": "Vanessa  gosta de batatas. \n"},
+{"role": "system", "content": "A Vanessa gosta de ofender. \n"},
+]
 
 player.on(AudioPlayerStatus.Playing, () => {
     console.log('The audio player has started playing!');
@@ -78,6 +89,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         });
         console.log(newState.member);
 
+     
 
         chatgpt({"role": "system", "content": "O " + newState.member.user.username + " acabou de chegar, dá-lhe as boas vindas a miar." + ". \n"},"False");
 
@@ -127,7 +139,7 @@ async function chatgpt_start(){
         selfDeaf: false,
         selfMute: false
     })
-    chatgpt({"role": "system", "content": "Anuncia a todos que renasceste das cinzas quando já ninguem contava com o teu retorno. Vais mostrar a tua ira e sede de vingança." + ". \n"},"False");
+    chatgpt({"role": "system", "content": "Anuncia que renascer das cinzas e entraste neste canal de voz para mandar nos membros presentes." + ". \n"},"False");
 }
 
 
@@ -140,18 +152,45 @@ function removeKeyword(message,keyword){
     }
     return message;
 }
+async function triggerRandomly() {
+
+
+    const intervalInMinutes = 60 / 10; // 5 times per hour
+    const intervalInMilliseconds = intervalInMinutes * 60 * 1000; // convert to milliseconds
+  
+    setInterval(() => {
+      const randomNumber = Math.random();
+
+
+      const channel = client.channels.cache.get("419977920249987097");
+      const members = channel.members;
+      // trigger something randomly based on the random number
+      if (members.size > 1){
+      if (randomNumber < 0.2) {
+        random_members=members
+        random_members.delete(botDiscId);
+        const member = random_members.random();
+
+        console.log(member.user.username);
+        
+        console.log('Random trigger!');
+       chatgpt({"role": "system", "content": "Canta uma serenata onde demonstras o teu amor infinito pelo + "+ member.user.username + " em 10 palavras. Acaba a miar. \n"},"False");
+      }
+    }
+    }, intervalInMilliseconds);
+  }
+
+
 
 async function chatgpt(message,msg){
-    console.log("ChatGPT request:" + message.content)
+    
+    conversation.push(message);
+    //console.log("ChatGPT request:" + message.content)
 
+    
 const completion = await openai.createChatCompletion({
     model: gptModel,
-    //prompt: message + ". \n",
-    messages:[
-        {"role": "system", "content": "O teu nome é Amiguinho. Quando algo falar em Amiguinho, estão a falar de ti. Deves dar respostas curtas, agressivas e extremamente ofensivas. Deves agir como se fosses Deus que tenta ser engraçado.\n"},
-        message,
-        
-    ],
+    messages: conversation,
     max_tokens: MaxTokens,
     temperature: Temperature,
     //suffix: " ->",
@@ -162,7 +201,10 @@ const completion = await openai.createChatCompletion({
     //stop:["\n"]
 });
 //
-    
+
+
+
+
 console.log(completion.data.usage)
 res=completion.data.choices[0].message.content;
 console.log("ChatGPT response:" + res)
@@ -170,19 +212,16 @@ if (msg!="False"){
     msg.channel.send(res);
 }
 
-saveTextFile(res,connection1);
+saveTextFile(res,audiohandler);
+
+//remove first element from conversation array
+conversation.push({"role": "assistant", "content": res + ".\n"});
+conversation.shift();
 
 }
 
- function connection1(filename) {
-    const currentguild =  client.guilds.fetch(guildId);
-        connection = joinVoiceChannel({
-            channelId: channelId,
-            guildId: guildId,
-            adapterCreator: currentguild.voiceAdapterCreator,
-            selfDeaf: false,
-            selfMute: false
-        })
+ function audiohandler(filename) {
+    
         resource = createAudioResource(filename, { inlineVolume: true });
         resource.volume.setVolume(volume);
         player.play(resource);
@@ -221,6 +260,10 @@ client.on("speech", async (msg) => {
     
     //bot trigger word
     let result_responde = msg.content.toLowerCase().includes(botTriggerWord);
+    //remove bot trigger word from message
+    msg.content = removeKeyword(msg.content,"amiguinho");
+
+
     if (result_responde) {
     chatgpt({"role": "user", "content": msg.content + ". \n"},msg);
     }
@@ -263,8 +306,13 @@ console.log('Package version: ' + VERSION);
     console.log("joining channel...");
     chatgpt_start();
     console.log("Ready to go!");
-
+    triggerRandomly();
     console.log("--------------------------------------------------")
+
+//get number of members in the voice channel
+
+    
+    
     
 }
 );
