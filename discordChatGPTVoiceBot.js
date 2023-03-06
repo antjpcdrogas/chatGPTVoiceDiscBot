@@ -166,7 +166,7 @@ async function triggerRandomly() {
       const members = channel.members;
       // trigger something randomly based on the random number
       if (members.size > 1){
-      if (randomNumber < 0.2) {
+      if (randomNumber < 0.4) {
         random_members=members
         random_members.delete(botDiscId);
         const member = random_members.random();
