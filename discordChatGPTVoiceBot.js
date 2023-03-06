@@ -262,7 +262,7 @@ client.on("speech", async (msg) => {
 
 
     if (result_responde) {
-    chatgpt({"role": "user", "content": msg.content + ". \n"},msg);
+    chatgpt({"role": "user", "content": msg.content + ".Dá uma reposta curta. \n"},msg);
     }
 });
 
