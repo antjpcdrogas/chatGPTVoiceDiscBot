@@ -65,9 +65,7 @@ conversation=[
 {"role": "system", "content": "Vanessa é transexual.\n"},
 {"role": "system", "content": "Vanessa  gosta de batatas. \n"},
 {"role": "system", "content": "maiu. \n"},
-{"role": "system", "content": "muuuu. \n"},
-{"role": "system", "content": "A Vanessa gosta de fazer sons de animais.\n"},
-{"role": "system", "content": "A Vanessa é feroz. \n"},
+
 ]
 
 player.on(AudioPlayerStatus.Playing, () => {
@@ -265,7 +263,7 @@ client.on("speech", async (msg) => {
 
 
     if (result_responde) {
-    chatgpt({"role": "user", "content": msg.content + ".Dá uma reposta curta. \n"},msg);
+    chatgpt({"role": "user", "content": + "Dá uma resposta curta a isto: "+ msg.content + ". \n"},msg);
     }
 });
 
