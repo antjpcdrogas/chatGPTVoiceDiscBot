@@ -202,10 +202,6 @@ const completion = await openai.createChatCompletion({
 });
 //
 
-
-
-
-
 console.log(completion.data.usage)
 res=completion.data.choices[0].message.content;
 console.log("ChatGPT response:" + res)
