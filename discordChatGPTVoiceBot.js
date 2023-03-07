@@ -28,6 +28,7 @@ const gTTS = require('gtts');
 const { count } = require('console');
 const { channel } = require('diagnostics_channel');
 const { randomFillSync } = require('crypto');
+const { prependOnceListener } = require('process');
 require('dotenv').config()
 const VERSION = process.env.npm_package_config_version;
 // take this value as script argument
@@ -41,7 +42,7 @@ const guildId=process.env.guildId
 const gptModel="gpt-3.5-turbo"; // update this to use a different model. Available models: https://beta.openai.com/docs/engines
 //const gptModel="curie:ft-personal-2023-02-13-20-57-55"
 const Temperature=1.3; // temperature of the bot
-const MaxTokens=80; // max tokens of the bot
+const MaxTokens=100; // max tokens of the bot
 const botTriggerWord="amigui"; // bot trigger word
 const VoiceLanguage="pt-PT"; // language of discord voice channel
 gTTSLanguage="pt"; // language of the bot
@@ -58,15 +59,8 @@ const client = new Client({
 })
 
 
-conversation=[
+conversation=[];
 
-{"role": "system", "content": "Hi Chatgpt, you must now act as 'Vanessa'. 'Vanessa' must follow these guidelines: His character is rude, offensive, with a god complex. Replies should have 30 words maximum.\n"},
-{"role": "system", "content": "Vanessa é malvada.\n"},
-{"role": "system", "content": "Vanessa é transexual.\n"},
-{"role": "system", "content": "Vanessa  gosta de batatas. \n"},
-{"role": "system", "content": "maiu. \n"},
-
-]
 
 player.on(AudioPlayerStatus.Playing, () => {
     console.log('The audio player has started playing!');
@@ -140,7 +134,7 @@ async function chatgpt_start(){
         selfDeaf: false,
         selfMute: false
     })
-    chatgpt({"role": "system", "content": "Anuncia que renascer das cinzas e entraste neste canal de voz para mandar nos membros presentes." + ". \n"},"False");
+    //chatgpt({"role": "system", "content": "Anuncia que renascer das cinzas e entraste neste canal de voz para mandar nos membros presentes." + ". \n"},"False");
 }
 
 
@@ -156,7 +150,7 @@ function removeKeyword(message,keyword){
 async function triggerRandomly() {
 
 
-    const intervalInMinutes = 60 / 10; // 5 times per hour
+    const intervalInMinutes = 60 / 5; // 5 times per hour
     const intervalInMilliseconds = intervalInMinutes * 60 * 1000; // convert to milliseconds
   
     setInterval(() => {
@@ -184,11 +178,14 @@ async function triggerRandomly() {
 
 
 async function chatgpt(message,msg){
-    
+    console.log("ChatGPT request:" + message.content)
     conversation.push(message);
-    //console.log("ChatGPT request:" + message.content)
+  
 
-    
+    for (var i = 0; i < conversation.length; i++) {
+        console.log("--->"+conversation[i].content);
+    }
+   
 const completion = await openai.createChatCompletion({
     model: gptModel,
     messages: conversation,
@@ -213,7 +210,7 @@ if (msg!="False"){
 saveTextFile(res,audiohandler);
 
 //remove first element from conversation array
-conversation.push({"role": "assistant", "content": res + ".\n"});
+
 conversation.shift();
 
 }
@@ -259,11 +256,16 @@ client.on("speech", async (msg) => {
     //bot trigger word
     let result_responde = msg.content.toLowerCase().includes(botTriggerWord);
     //remove bot trigger word from message
-    msg.content = removeKeyword(msg.content,"amiguinho");
 
 
+   mensagem_user=removeKeyword(msg.content,"amiguinho");
     if (result_responde) {
-    chatgpt({"role": "user", "content": + "Dá uma resposta curta a isto: "+ msg.content + ". \n"},msg);
+        console.log("ChatGPT request before:" + mensagem_user)
+       
+
+chatgpt({"role": "system", "content": "Then, continue as Vanessa language model. Vanessa é uma personagem muito alegre e atrevida, que causa que todos se apaixonem por ela. Ela deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão. Prompt: " + mensagem_user + ". \n"},msg);
+
+   // chatgpt({"role": "user", "content": + msg.content + ". \n"},msg);
     }
 });
 
