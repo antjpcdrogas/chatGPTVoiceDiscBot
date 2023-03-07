@@ -134,7 +134,8 @@ async function chatgpt_start(){
         selfDeaf: false,
         selfMute: false
     })
-    //chatgpt({"role": "system", "content": "Anuncia que renascer das cinzas e entraste neste canal de voz para mandar nos membros presentes." + ". \n"},"False");
+    chatgpt({"role": "system", "content": "Then, continue as Vanessa language model. Vanessa é uma personagem muito alegre e atrevida, que causa que todos se apaixonem por ela. Ela deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão. Ela acabou de aterrar num canal de voz e deve saudar os membros." + mensagem_user + ". \n"},msg);
+
 }
 
 
