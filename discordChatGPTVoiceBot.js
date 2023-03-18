@@ -11,13 +11,12 @@
 // channelId=your channel id
 // guildId=your guild id
 // OPENAI_API_KEY=your openai api key
-// 2. create a tmp folder in the same folder as the bot
 // 3. install all dependencies
 // 4. run the bot using node discordChatGPTVoiceBot.js. Bot should join the channel and start listening to speech
 // 5. Join the channel to hear a personalized greeting from the bot
 // 6. Say the trigger word "reply" to get a response from the bot
 ////////////////////////////////////////////////////////////////////////////////////////
-const { Client, GatewayIntentBits, setPosition} = require('discord.js')
+const { Client, GatewayIntentBits} = require('discord.js')
 const { addSpeechEvent } = require("discord-speech-recognition");
 const { joinVoiceChannel } = require('@discordjs/voice');
 const { createAudioPlayer } = require('@discordjs/voice');
@@ -25,17 +24,10 @@ const { createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
 var fs = require('fs');
 const { Configuration, OpenAIApi } = require("openai");
 const gTTS = require('gtts');
-const { count } = require('console');
-const { channel } = require('diagnostics_channel');
-const { randomFillSync } = require('crypto');
-const { prependOnceListener } = require('process');
+const stream = require('stream');
 require('dotenv').config()
 const VERSION = process.env.npm_package_config_version;
 // take this value as script argument
-
-
-
-
 const botDiscId=process.env.botDiscId
 const channelId=process.env.channelId
 const guildId=process.env.guildId
@@ -57,7 +49,7 @@ const client = new Client({
         GatewayIntentBits.GuildPresences
     ]
 })
-
+const { PassThrough } = require('stream');
 
 conversation=[];
 
@@ -86,7 +78,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
      
 
-        chatgpt({"role": "system", "content": "O " + newState.member.user.username + " acabou de chegar, dá-lhe as boas vindas a miar." + ". \n"},"False");
+        chatgpt({"role": "system", "content": "O " + newState.member.user.username + " acabou de chegar, dá-lhe as boas vindas a miar, usando no máximo 6 palavras." + ". \n"},"False");
 
     }
 });
@@ -95,29 +87,21 @@ profanityFilter: false,
 });
 
 
- function saveTextFile(textToSpeak,callback) {
-  var fileName = "tmp/" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + ".mp3";
-    try
-    {
-    var gtts = new gTTS(textToSpeak, gTTSLanguage,tld='pt');
-
-    gtts.save(fileName, function (err, result) {
-     
-        if(err) { throw new Error(err) }
-        console.log('Audio file saved.');
-        
-      
-        callback(fileName);
-    }); 
-    
-
+function saveTextStream(textToSpeak, callback) {
+    try {
+      var gtts = new gTTS(textToSpeak, gTTSLanguage,tld="pt",2);
+  
+      //Create stream instead of saving to file
+      var audioStream = gtts.stream();
+  
+      // Call the callback function with the audio stream
+      callback(audioStream);
+  
+    } catch(err) {
+      console.log("Not able to read text, try again.");
+      console.log(err);
     }
-    catch(err)
-    {
-    console.log("Not able to read text, try again.");
-    console.log(err);
-    }
-    }
+  }
      
 
 async function chatgpt_start(){
@@ -134,7 +118,7 @@ async function chatgpt_start(){
         selfDeaf: false,
         selfMute: false
     })
-    chatgpt({"role": "system", "content": "Then, continue as Vanessa language model. Vanessa é uma personagem muito alegre e atrevida, que causa que todos se apaixonem por ela. Ela deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão. Ela acabou de aterrar num canal de voz e deve saudar os membros. \n"},"False");
+    chatgpt({"role": "system", "content": "Then, continue as Vanessa language model. Ela deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão. Ela acabou de aterrar num canal de voz e deve saudar os membros. \n"},"False");
 
 }
 
@@ -181,16 +165,13 @@ async function chatgpt(message,msg){
     console.log("ChatGPT request:" + message.content)
     conversation.push(message);
   
-
-    for (var i = 0; i < conversation.length; i++) {
-        console.log("--->"+conversation[i].content);
-    }
    
 const completion = await openai.createChatCompletion({
     model: gptModel,
     messages: conversation,
     max_tokens: MaxTokens,
     temperature: Temperature,
+    stream: false,
     //suffix: " ->",
     //presencePenalty: 0, 
     //frequencyPenalty: 0,
@@ -200,14 +181,13 @@ const completion = await openai.createChatCompletion({
 });
 //
 
-console.log(completion.data.usage)
 res=completion.data.choices[0].message.content;
 console.log("ChatGPT response:" + res)
 if (msg!="False"){
     msg.channel.send(res);
 }
 
-saveTextFile(res,audiohandler);
+saveTextStream(res,audiohandler);
 
 //remove first element from conversation array
 
@@ -215,34 +195,37 @@ conversation.shift();
 
 }
 
- function audiohandler(filename) {
-    
-        resource = createAudioResource(filename, { inlineVolume: true });
-        resource.volume.setVolume(volume);
-        player.play(resource);
-        connection.subscribe(player);
-        console.log("playing audio file: " + filename);
-        
-        
-    }
+
+  
+
+
+
+
+function audiohandler(audioStream) {
+    const audioPlayer = createAudioPlayer();
+    // Create a new ReadableStream from the audio stream
+    var stream = new PassThrough();
+    audioStream.pipe(stream);
+  
+    // Play the stream in the current voice connection
+
+
+    const resource = createAudioResource(stream);
+    audioPlayer.play(resource);
+    connection.subscribe(audioPlayer);
+
+  }
+
+
+
+
     function sleep_func(millis) {
         return new Promise(resolve => setTimeout(resolve, millis));
     }
 //////////////////////
 client.on("speech", async (msg) => { 
     // If bot didn't recognize speech, content will be empty
-    //count number of files inside tmp folder
-    var count_tmp = 0;
-    fs.readdirSync("tmp").forEach(file => {
-        count_tmp++;
-    });
-    if (count_tmp > 10) {
-        console.log("Cleaning up tmp folder...")
-        fs.readdirSync("tmp").forEach(file => {
-            fs.unlinkSync("tmp/"+file);
-            
-        });
-    }
+
     if (!msg.content) return;
     var currentdate = new Date();
     var datetime = currentdate.getDate() + "/"
@@ -263,7 +246,7 @@ client.on("speech", async (msg) => {
         console.log("ChatGPT request before:" + mensagem_user)
        
 
-chatgpt({"role": "system", "content": "Then, continue as Vanessa language model. Vanessa é uma personagem muito alegre e atrevida, que causa que todos se apaixonem por ela. Ela deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão. Prompt: " + mensagem_user + ". \n"},msg);
+chatgpt({"role": "system", "content": "Then, continue as Vanessa language model. Ela deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão. Prompt: " + mensagem_user + ". \n"},msg);
 
    // chatgpt({"role": "user", "content": + msg.content + ". \n"},msg);
     }
@@ -295,12 +278,6 @@ datetime=getDateTime();
 
 console.log(datetime + '-- Starting up...');
 console.log('Package version: ' + VERSION);
-    //delete all files in tmp folder
-    console.log('Cleaning up tmp folder...')
-    fs.readdirSync("tmp").forEach(file => {
-        fs.unlinkSync("tmp/"+file);
-    })
-    console.log('Cleaning up done.')
     //get client username
     console.log('Logged in as ' + client.user.username + ' - (' + client.user.id + ')');
     console.log("joining channel...");
