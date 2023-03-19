@@ -22,6 +22,7 @@ const { joinVoiceChannel } = require('@discordjs/voice');
 const { createAudioPlayer } = require('@discordjs/voice');
 const { createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
 var fs = require('fs');
+const parse = require("@fortaine/fetch-event-source/parse");
 const { Configuration, OpenAIApi } = require("openai");
 const gTTS = require('gtts');
 const stream = require('stream');
@@ -31,6 +32,21 @@ const VERSION = process.env.npm_package_config_version;
 const botDiscId=process.env.botDiscId
 const channelId=process.env.channelId
 const guildId=process.env.guildId
+
+
+
+const EventSource = require('eventsource');
+const url = 'https://api.openai.com/v1/chat/completions';
+const headers = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+};
+
+
+
+
+
+
 const gptModel="gpt-3.5-turbo"; // update this to use a different model. Available models: https://beta.openai.com/docs/engines
 //const gptModel="curie:ft-personal-2023-02-13-20-57-55"
 const Temperature=1.3; // temperature of the bot
@@ -39,6 +55,7 @@ const botTriggerWord="amigui"; // bot trigger word
 const VoiceLanguage="pt-PT"; // language of discord voice channel
 gTTSLanguage="pt"; // language of the bot
 const volume=0.5;
+
 const player = createAudioPlayer();
 const client = new Client({
     intents: [
@@ -88,15 +105,16 @@ profanityFilter: false,
 
 
 function saveTextStream(textToSpeak, callback) {
+    
     try {
       var gtts = new gTTS(textToSpeak, gTTSLanguage,tld="pt",2);
   
       //Create stream instead of saving to file
       var audioStream = gtts.stream();
-  
+      
       // Call the callback function with the audio stream
       callback(audioStream);
-  
+        
     } catch(err) {
       console.log("Not able to read text, try again.");
       console.log(err);
@@ -162,42 +180,79 @@ async function triggerRandomly() {
 
 
 async function chatgpt(message,msg){
-    console.log("ChatGPT request:" + message.content)
     conversation.push(message);
   
-   
+
 const completion = await openai.createChatCompletion({
     model: gptModel,
     messages: conversation,
     max_tokens: MaxTokens,
     temperature: Temperature,
-    stream: false,
+    stream: true},
+    
+  { responseType: "stream" }
     //suffix: " ->",
     //presencePenalty: 0, 
     //frequencyPenalty: 0,
     //bestOf: 1,
     //n: 1,
     //stop:["\n"]
-});
+);
 //
 
-res=completion.data.choices[0].message.content;
-console.log("ChatGPT response:" + res)
-if (msg!="False"){
-    msg.channel.send(res);
-}
+//console.log(completion.data)
+stream_msg="";
+completion.data.on('data', data => {
 
-saveTextStream(res,audiohandler);
+    const lines = data.toString().split('\n').filter(line => line.trim() !== '');
+    
+    for (const line of lines) {
+        const message = line.replace(/^data: /, '');
+        if (message === '[DONE]') {
+            saveTextStream(stream_msg,audiohandler);
+            if (stream_msg!=undefined && stream_msg!=""){
+                try{
+                msg.channel.send(stream_msg);
+                }catch(err){
+                    console.log(err);
+                }
+
+            }
+            //saveTextStream(stream_msg,audiohandler);
+            return; // Stream finished
+        }
+        try {
+            const parsed = JSON.parse(message);
+
+            if (parsed.choices[0].delta.content != undefined){
+                stream_msg=stream_msg+parsed.choices[0].delta.content ;
+                
+               
+                
+            }
+
+        } catch(error) {
+            console.error('Could not JSON parse stream message', message, error);
+        }
+    
+    }
+});
+
+
+//res=completion.data.choices[0].message.content;
+
+//console.log("ChatGPT response:" + res)
+//if (msg!="False"){
+//    msg.channel.send(res);
+//}
+//
+//saveTextStream(res,audiohandler);
 
 //remove first element from conversation array
 
 conversation.shift();
 
 }
-
-
-  
-
 
 
 
@@ -217,11 +272,6 @@ function audiohandler(audioStream) {
   }
 
 
-
-
-    function sleep_func(millis) {
-        return new Promise(resolve => setTimeout(resolve, millis));
-    }
 //////////////////////
 client.on("speech", async (msg) => { 
     // If bot didn't recognize speech, content will be empty
@@ -243,7 +293,7 @@ client.on("speech", async (msg) => {
 
    mensagem_user=removeKeyword(msg.content,"amiguinho");
     if (result_responde) {
-        console.log("ChatGPT request before:" + mensagem_user)
+        console.log("ChatGPT request:" + mensagem_user)
        
 
 chatgpt({"role": "system", "content": "Then, continue as Vanessa language model. Ela deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão. Prompt: " + mensagem_user + ". \n"},msg);
