@@ -23,6 +23,7 @@ $ npm install --save chatgptvoicediscbot
 - prompts by Voice
 - Replies by Voice
 - Works with multiple languages
+- Version 2 uses stream instead of files to play audio responses. ChatGPT response is also using stream. This update increase the response time by almost 3 seconds, makins the voice response almost instant.
 ## Usage
 
 ```js
