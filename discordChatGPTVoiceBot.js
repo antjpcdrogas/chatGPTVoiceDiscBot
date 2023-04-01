@@ -68,7 +68,9 @@ const client = new Client({
 })
 const { PassThrough } = require('stream');
 
-conversation=[];
+conversation=[{"role": "system", "content": "Then, continue as Vanessa language model. Ela deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão. Ela acabou de aterrar num canal de voz e deve saudar os membros. \n"},
+{"role": "system", "content": "Ela acabou de aterrar num canal de voz e deve saudar os membros. \n"}
+];
 
 
 player.on(AudioPlayerStatus.Playing, () => {
@@ -152,7 +154,7 @@ function removeKeyword(message,keyword){
 async function triggerRandomly() {
 
 
-    const intervalInMinutes = 60 / 5; // 5 times per hour
+    const intervalInMinutes = 60 / 2; // 5 times per hour
     const intervalInMilliseconds = intervalInMinutes * 60 * 1000; // convert to milliseconds
   
     setInterval(() => {
@@ -180,9 +182,14 @@ async function triggerRandomly() {
 
 
 async function chatgpt(message,msg){
+
+    // add item in the first position of the conversation array
+    
+
+
     conversation.push(message);
   
-
+    console.log(conversation)
 const completion = await openai.createChatCompletion({
     model: gptModel,
     messages: conversation,
@@ -212,6 +219,10 @@ completion.data.on('data', data => {
             saveTextStream(stream_msg,audiohandler);
             if (stream_msg!=undefined && stream_msg!=""){
                 try{
+                    console.log("ChatGPT response:" + stream_msg+"\n")
+                    conversation.push({"role": "assistant", "content": stream_msg+"\n"});
+
+                
                 msg.channel.send(stream_msg);
                 }catch(err){
                     console.log(err);
@@ -250,8 +261,9 @@ completion.data.on('data', data => {
 
 //remove first element from conversation array
 
-conversation.shift();
-
+//conversation.shift();
+ // remove last 2 elements from conversation array
+conversation.splice(-2, 2);
 }
 
 
@@ -296,7 +308,7 @@ client.on("speech", async (msg) => {
         console.log("ChatGPT request:" + mensagem_user)
        
 
-chatgpt({"role": "system", "content": "Then, continue as Vanessa language model. Ela deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão. Prompt: " + mensagem_user + ". \n"},msg);
+chatgpt({"role": "system", "content": "Prompt: " + mensagem_user + ". \n"},msg);
 
    // chatgpt({"role": "user", "content": + msg.content + ". \n"},msg);
     }
