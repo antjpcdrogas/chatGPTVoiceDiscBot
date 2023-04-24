@@ -32,6 +32,7 @@ var chatgptvoicediscbot = require("chatgptvoicediscbot");
 chatgptvoicediscbot();
 node discordChatGPTVoiceBot.js
 
+
 Environment variables:
 - BOT_TOKEN
 - OPENAI_API_KEY
