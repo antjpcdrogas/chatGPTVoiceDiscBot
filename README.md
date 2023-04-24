@@ -18,6 +18,7 @@ $ npm install --save chatgptvoicediscbot
 
 ## Features
 
+
 - Uses official Discord and OpenAI modules
 - Continuous conversation in the same session(removed due to high token usage)
 - prompts by Voice
