@@ -108,7 +108,6 @@ addSpeechEvent(client, { lang: VoiceLanguage ,
 profanityFilter: false,
 });
 
-
 function saveTextStream(textToSpeak, callback) {
     
 
