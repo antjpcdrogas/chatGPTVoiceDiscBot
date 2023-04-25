@@ -35,7 +35,7 @@ const VERSION = process.env.npm_package_config_version;
 const botDiscId=process.env.botDiscId
 const channelId=process.env.channelId
 const guildId=process.env.guildId
-
+const speech_key=process.env.SPEECH_KEY
 
 
 const EventSource = require('eventsource');
@@ -110,9 +110,9 @@ profanityFilter: false,
 
 function saveTextStream(textToSpeak, callback) {
     
-    
 
-    const speechConfig = sdk.SpeechConfig.fromSubscription(process.env.SPEECH_KEY, "eastus");
+
+    const speechConfig = sdk.SpeechConfig.fromSubscription(speech_key, "eastus");
     speechConfig.speechSynthesisVoiceName = "pt-BR-GiovannaNeural";
     const speechSynthesizer = new sdk.SpeechSynthesizer(speechConfig);
     

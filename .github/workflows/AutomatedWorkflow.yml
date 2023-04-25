@@ -73,7 +73,7 @@ jobs:
       - run: sed -i s/PRIVATE_IP/$(dig +short @ns1-34.azure-dns.com. discbotgpt.discbotgpt.com)/ infra_app/ansible/inventory
 
       - name: Ansible Playbook
-        run: ansible-playbook -i infra_app/ansible/inventory infra_app/ansible/main.yaml --extra-vars "BOT_TOKEN=$BOT_TOKEN OPENAI_API_KEY=$OPENAI_API_KEY botDiscId=$botDiscId channelId=$channelId guildId=$guildId SPEECH_KEY=$SPEECH_KEY" 
+        run: ansible-playbook -i infra_app/ansible/inventory infra_app/ansible/main.yaml --extra-vars "SPEECH_KEY=$SPEECH_KEY BOT_TOKEN=$BOT_TOKEN OPENAI_API_KEY=$OPENAI_API_KEY botDiscId=$botDiscId channelId=$channelId guildId=$guildId" 
       - name: Upload Ansible Artifact
         uses: actions/upload-artifact@master
         with:
