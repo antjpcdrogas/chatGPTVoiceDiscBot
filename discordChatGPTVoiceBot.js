@@ -118,11 +118,8 @@ function saveTextStream(textToSpeak, callback) {
         `
     <speak version="1.0" xmlns="https://www.w3.org/2001/10/synthesis"  xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="en-US">
   <voice name="pt-BR-FranciscaNeural">
-  <prosody rate='0.82'>
-
+  <prosody rate='0.76'>
   <mstts:express-as style="calm">
-
-
     ${textToSpeak}
     </mstts:express-as>
     </prosody>
