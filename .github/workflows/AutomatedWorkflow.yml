@@ -36,8 +36,7 @@ jobs:
       - name: Use extracted value in another task
         run: echo "Extracted value ${{ steps.extract.outputs.value }}"
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ steps.extract.outputs.value }}
+          ref: main
 
       - name: Generate package.json
         run: |
