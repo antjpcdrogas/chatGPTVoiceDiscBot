@@ -46,7 +46,9 @@ const headers = {
 };
 
 
-
+voice_female="pt-BR-FranciscaNeural";
+voice_male="pt-BR-AntonioNeural";
+voice="";
 
 
 const gptModel="gpt-3.5-turbo"; // update this to use a different model. Available models: https://beta.openai.com/docs/engines
@@ -69,8 +71,8 @@ const client = new Client({
     ]
 })
 const { PassThrough } = require('stream');
-
-conversation=[{"role": "system", "content": "Then, continue as Vanessa language model. Ela deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão. Ela acabou de aterrar num canal de voz e deve saudar os membros. \n"},
+character="Vanessa";
+conversation=[{"role": "system", "content": "Then, continue as character language model. Your name will be defined after.Se for Vanessa, Ela deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão. Se for António, deve responder com respostas curtas mas simpáticas, com trocadilhos engraçados. \n"},
 {"role": "system", "content": "Ela acabou de aterrar num canal de voz e deve saudar os membros. \n"}
 ];
 
@@ -114,14 +116,15 @@ function saveTextStream(textToSpeak, callback) {
     const speechConfig = sdk.SpeechConfig.fromSubscription(speech_key, "eastus");
     const speechSynthesizer = new sdk.SpeechSynthesizer(speechConfig, null);
     console.log("Azure TTS:")
+    console.log(voice)
     speechSynthesizer.speakSsmlAsync(
         `
-    <speak version="1.0" xmlns="https://www.w3.org/2001/10/synthesis"  xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="en-US">
-  <voice name="pt-BR-FranciscaNeural">
+    <speak version="1.0" xmlns="https://www.w3.org/2001/10/synthesis"   xml:lang="en-US">
+  <voice name="${voice}">
   <prosody rate='0.76'>
-  <mstts:express-as style="calm">
+
     ${textToSpeak}
-    </mstts:express-as>
+
     </prosody>
   </voice>
 </speak>
@@ -173,7 +176,7 @@ async function chatgpt_start(){
         selfDeaf: false,
         selfMute: false
     })
-    chatgpt({"role": "system", "content": "Then, continue as Vanessa language model. Ela deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão. Ela acabou de aterrar num canal de voz e deve saudar os membros. \n"},"False");
+    chatgpt({"role": "system", "content": "Then, continue as Vanessa language model. Ele deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão. Ela acabou de aterrar num canal de voz e deve saudar os membros. \n"},"False");
 }
 
 //remove keywork from string message
@@ -193,8 +196,6 @@ async function triggerRandomly() {
   
     setInterval(() => {
       const randomNumber = Math.random();
-
-
       const channel = client.channels.cache.get("419977920249987097");
       const members = channel.members;
       // trigger something randomly based on the random number
@@ -333,16 +334,31 @@ client.on("speech", async (msg) => {
     console.log(datetime + " - " + msg.author.username + ": " + msg.content);
     
     //bot trigger word
-    let result_responde = msg.content.toLowerCase().includes(botTriggerWord);
+    let result_responde = msg.content.includes(character);
+    let antonio_responde = msg.content.toLowerCase().includes("chama o antónio");
+    let vanessa_responde = msg.content.toLowerCase().includes("chama a vanessa");
     //remove bot trigger word from message
+    if (antonio_responde) {
+        console.log("dwitch to antonio trigger")
+        voice=voice_male;
+        character="António";
+        chatgpt({"role": "system", "content": "Prompt: A partir de agora és o António, uma personagem de poucas palavras mas um amor de pessoa e muito carinhoso. Acabaram de chamar por ti, anuncia a tua entrada. \n"},msg);
+        return true
+    }
+    if (vanessa_responde) {
+        console.log("dwitch to antonio trigger")
+        voice=voice_female;
+        character="Vanessa";
+        chatgpt({"role": "system", "content": "Prompt: A partir de agora és novamente a Vanessa. Acabaram de chamar por ti, anuncia a tua entrada.\n"},msg);
+        return true
+    }
 
-
-   mensagem_user=removeKeyword(msg.content,"amiguinho");
+   mensagem_user=removeKeyword(msg.content,character);
     if (result_responde) {
         console.log("ChatGPT request:" + mensagem_user)
        
 
-chatgpt({"role": "system", "content": "Prompt: " + mensagem_user + ". \n"},msg);
+chatgpt({"role": "system", "content": "character: "+ character +". Member name: "+ msg.author.username + " Prompt:" +  mensagem_user + ". \n"},msg);
 
    // chatgpt({"role": "user", "content": + msg.content + ". \n"},msg);
     }
@@ -381,6 +397,7 @@ console.log('Package version: ' + VERSION);
     console.log("Ready to go!");
     triggerRandomly();
     console.log("--------------------------------------------------")
+    voice=voice_female;
 
 
 
@@ -406,6 +423,15 @@ client.on('messageCreate', message => { // when there is a message sent
         console.log("Connecting to voice channel...");
         chatgpt_start();
         console.log("Connected to voice channel.");
+    }
+    if (message.content.toLowerCase().includes("!switchmale")) { 
+        console.log("switching from " + voice + " to" + voice_male)
+        voice=voice_male
+        
+    }
+    if (message.content.toLowerCase().includes("!switchfemale")) { 
+        console.log("switching from " + voice + " to" + voice_female)
+        voice=voice_female
     }
     if (message.content.toLowerCase().includes("!version")) { 
         message.channel.send(VERSION)
