@@ -49,7 +49,6 @@ const headers = {
 
 
 
-
 const gptModel="gpt-3.5-turbo"; // update this to use a different model. Available models: https://beta.openai.com/docs/engines
 //const gptModel="curie:ft-personal-2023-02-13-20-57-55"
 const Temperature=1.3; // temperature of the bot
@@ -113,27 +112,37 @@ function saveTextStream(textToSpeak, callback) {
 
 
     const speechConfig = sdk.SpeechConfig.fromSubscription(speech_key, "eastus");
-    speechConfig.speechSynthesisVoiceName = "pt-BR-GiovannaNeural";
-    const speechSynthesizer = new sdk.SpeechSynthesizer(speechConfig);
-    
+    const speechSynthesizer = new sdk.SpeechSynthesizer(speechConfig, null);
     console.log("Azure TTS:")
-    speechSynthesizer.speakTextAsync(
-        textToSpeak,
-        result => {
-            const { audioData } = result;
-            speechSynthesizer.close();
+    speechSynthesizer.speakSsmlAsync(
+        `
+    <speak version="1.0" xmlns="https://www.w3.org/2001/10/synthesis" xml:lang="en-US">
+  <voice name="pt-BR-FranciscaNeural">
+  <prosody rate='0.82'>
 
-            // convert arrayBuffer to stream
-            const bufferStream = new PassThrough();
-            bufferStream.end(Buffer.from(audioData));
-            callback(bufferStream);
-            //return bufferStream;
+
+    ${textToSpeak}
+
+    </prosody>
+  </voice>
+</speak>
+  `,
+        result => {
+          const { audioData } = result;
+          speechSynthesizer.close();
+      
+          // convert arrayBuffer to stream
+          const bufferStream = new PassThrough();
+          bufferStream.end(Buffer.from(audioData));
+          callback(bufferStream);
+          //return bufferStream;
         },
         error => {
-            console.log("ERROR")
-            console.log(error);
-            speechSynthesizer.close();
-        });
+          console.log("ERROR");
+          console.log(error);
+          speechSynthesizer.close();
+        }
+      );
 
 
     try {
