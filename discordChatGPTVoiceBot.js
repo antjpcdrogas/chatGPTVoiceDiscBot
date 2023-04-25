@@ -373,6 +373,7 @@ console.log('Package version: ' + VERSION);
     console.log("Ready to go!");
     triggerRandomly();
     console.log("--------------------------------------------------")
+    console.log(SPEECH_KEY)
 
 
 //get number of members in the voice channel
