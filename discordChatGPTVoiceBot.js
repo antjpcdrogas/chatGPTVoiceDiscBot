@@ -112,7 +112,7 @@ profanityFilter: false,
 function saveTextStream(textToSpeak, callback) {
     
 
-    const speechConfig = sdk.SpeechConfig.fromSubscription(process.env.SPEECH_KEY, process.env.SPEECH_REGION);
+    const speechConfig = sdk.SpeechConfig.fromSubscription(process.env.SPEECH_KEY, "eastus");
     speechConfig.speechSynthesisVoiceName = "pt-BR-GiovannaNeural";
     const speechSynthesizer = new sdk.SpeechSynthesizer(speechConfig);
     

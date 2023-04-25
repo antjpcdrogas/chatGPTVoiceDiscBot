@@ -48,3 +48,4 @@
           botDiscId: "{{ botDiscId }}"
           channelId: "{{ channelId }}"
           guildId: "{{ guildId }}"
+          SPEECH_KEY: "{{ SPEECH_KEY }}"
