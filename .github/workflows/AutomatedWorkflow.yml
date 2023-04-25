@@ -12,6 +12,7 @@ env:
   botDiscId: ${{secrets.NODE_DISC_BOT_ID}}
   channelId: ${{secrets.NODE_DISC_CHANNEL_ID}}
   guildId: ${{secrets.NODE_DISC_GUILD_ID}}
+  SPEECH_KEY: ${{secrets.SPEECH_KEY}}
   commitMessage: ${{ github.event.head_commit.message }}
   
 
