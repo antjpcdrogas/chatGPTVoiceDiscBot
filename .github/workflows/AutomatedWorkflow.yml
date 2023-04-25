@@ -66,7 +66,7 @@ jobs:
           BOT_TOKEN: ${{secrets.NODE_DISC_API_KEY}}
           
   startDocker:
-    needs: [buildImage, apply]
+    needs: [buildImage]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
