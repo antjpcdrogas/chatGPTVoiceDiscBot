@@ -21,6 +21,9 @@ const { addSpeechEvent } = require("discord-speech-recognition");
 const { joinVoiceChannel } = require('@discordjs/voice');
 const { createAudioPlayer } = require('@discordjs/voice');
 const { createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
+const sdk = require("microsoft-cognitiveservices-speech-sdk");
+
+
 var fs = require('fs');
 const parse = require("@fortaine/fetch-event-source/parse");
 const { Configuration, OpenAIApi } = require("openai");
@@ -108,14 +111,35 @@ profanityFilter: false,
 
 function saveTextStream(textToSpeak, callback) {
     
+
+    const speechConfig = sdk.SpeechConfig.fromSubscription(process.env.SPEECH_KEY, process.env.SPEECH_REGION);
+    speechConfig.speechSynthesisVoiceName = "pt-BR-GiovannaNeural";
+    const speechSynthesizer = new sdk.SpeechSynthesizer(speechConfig);
+    
+    console.log("Azure TTS:")
+    speechSynthesizer.speakTextAsync(
+        textToSpeak,
+        result => {
+            const { audioData } = result;
+            speechSynthesizer.close();
+
+            // convert arrayBuffer to stream
+            const bufferStream = new PassThrough();
+            bufferStream.end(Buffer.from(audioData));
+            callback(bufferStream);
+            //return bufferStream;
+        },
+        error => {
+            console.log("ERROR")
+            console.log(error);
+            speechSynthesizer.close();
+        });
+
+
     try {
-      var gtts = new gTTS(textToSpeak, gTTSLanguage,tld="pt",2);
-  
-      //Create stream instead of saving to file
-      var audioStream = gtts.stream();
-      
+ 
       // Call the callback function with the audio stream
-      callback(audioStream);
+      
         
     } catch(err) {
       console.log("Not able to read text, try again.");
@@ -142,7 +166,6 @@ async function chatgpt_start(){
         selfMute: false
     })
     chatgpt({"role": "system", "content": "Then, continue as Vanessa language model. Ela deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão. Ela acabou de aterrar num canal de voz e deve saudar os membros. \n"},"False");
-
 }
 
 //remove keywork from string message
@@ -351,6 +374,7 @@ console.log('Package version: ' + VERSION);
     triggerRandomly();
     console.log("--------------------------------------------------")
 
+
 //get number of members in the voice channel
 
     
@@ -392,3 +416,8 @@ client.on('messageCreate', message => { // when there is a message sent
     }*/
 })
 client.login(process.env.BOT_TOKEN);
+
+
+
+
+
