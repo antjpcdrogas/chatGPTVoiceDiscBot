@@ -73,7 +73,7 @@ const client = new Client({
 
 personality_vanessa="Then, continue as Vanessa model. Ela deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão.  \n"
 personality_antonio="Then, continue as António model. Ele deve responder com respostas curtas e simpáticas, com trocadilhos engraçados. \n"
-personality_tech="És um engenheiro de DevOps que trabalha com gitlab ci e terraform. O teu objetivo é ajudar na construção de um novo workflow, por isso deves sugerir e propor novas ideias, se forem relevantes para o tema. Deves responder com respostas curtas.\n"
+personality_joao="És um engenheiro de DevOps que trabalha com gitlab ci e terraform. O teu objetivo é ajudar na construção de um novo workflow, por isso deves sugerir e propor novas ideias, se forem relevantes para o tema. Deves responder com respostas curtas.\n"
 
 current_personality=personality_vanessa;
 
@@ -352,6 +352,7 @@ client.on("speech", async (msg) => {
         voice=voice_male;
         character="António";
         current_personality=personality_antonio;
+        conversation[0]={"role": "system", "content": current_personality}
         chatgpt({"role": "system", "content": "Prompt: A partir de agora és o António, uma personagem de poucas palavras mas um amor de pessoa e muito carinhoso. Acabaram de chamar por ti, anuncia a tua entrada. \n"},msg);
         return true
     }
@@ -360,6 +361,7 @@ client.on("speech", async (msg) => {
         voice=voice_female;
         character="Vanessa";
         current_personality=personality_vanessa;
+        conversation[0]={"role": "system", "content": current_personality}
         chatgpt({"role": "system", "content": "Prompt: A partir de agora és novamente a Vanessa. Acabaram de chamar por ti, anuncia a tua entrada.\n"},msg);
         return true
     }
@@ -368,6 +370,11 @@ client.on("speech", async (msg) => {
         voice=voice_male;
         character="João";
         current_personality=personality_joao;
+
+        //replace first element of conversation array
+        conversation[0]={"role": "system", "content": current_personality}
+        
+
         chatgpt({"role": "system", "content": "Prompt: A partir de agora és o João.\n"},msg);
         return true
     }
