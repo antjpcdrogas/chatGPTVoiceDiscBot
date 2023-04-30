@@ -48,6 +48,7 @@ const headers = {
 
 voice_female="pt-BR-FranciscaNeural";
 voice_male="pt-BR-AntonioNeural";
+voice_joao="pt-PT-DuarteNeural";
 voice="";
 
 
@@ -73,7 +74,7 @@ const client = new Client({
 
 personality_vanessa="Then, continue as Vanessa model. Ela deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão.  \n"
 personality_antonio="Then, continue as António model. Ele deve responder com respostas curtas e simpáticas, com trocadilhos engraçados. \n"
-personality_joao="És um engenheiro de DevOps que trabalha com gitlab ci e terraform. O teu objetivo é ajudar na construção de um novo workflow, por isso deves sugerir e propor novas ideias, se forem relevantes para o tema. Deves responder com respostas curtas.\n"
+personality_joao="És um engenheiro de DevOps que trabalha com gitlab ci e terraform. O teu objetivo é ajudar na construção de um novo workflow, por isso deves sugerir e propor novas ideias, se forem relevantes para o tema. Deves responder com respostas curtas, em português de Portugal.\n"
 
 current_personality=personality_vanessa;
 
@@ -367,7 +368,7 @@ client.on("speech", async (msg) => {
     }
     if (joao_responde) {
         console.log("switch to joao trigger")
-        voice=voice_male;
+        voice=voice_joao;
         character="João";
         current_personality=personality_joao;
 
