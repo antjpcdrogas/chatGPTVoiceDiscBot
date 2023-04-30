@@ -70,9 +70,16 @@ const client = new Client({
         GatewayIntentBits.GuildPresences
     ]
 })
+
+personality_vanessa="Then, continue as Vanessa model. Ela deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão.  \n"
+personality_antonio="Then, continue as António model. Ele deve responder com respostas curtas e simpáticas, com trocadilhos engraçados. \n"
+personality_tech="És um engenheiro de DevOps que trabalha com gitlab ci e terraform. O teu objetivo é ajudar na construção de um novo workflow, por isso deves sugerir e propor novas ideias, se forem relevantes para o tema. Deves responder com respostas curtas.\n"
+
+current_personality=personality_vanessa;
+
 const { PassThrough } = require('stream');
 character="Vanessa";
-conversation=[{"role": "system", "content": "Then, continue as character language model. Your name will be defined after.Se for Vanessa, Ela deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão. Se for António, deve responder com respostas curtas mas simpáticas, com trocadilhos engraçados. \n"},
+conversation=[{"role": "system", "content": current_personality},
 {"role": "system", "content": "Ela acabou de aterrar num canal de voz e deve saudar os membros. \n"}
 ];
 
@@ -337,28 +344,39 @@ client.on("speech", async (msg) => {
     let result_responde = msg.content.includes(character);
     let antonio_responde = msg.content.toLowerCase().includes("chama o antónio");
     let vanessa_responde = msg.content.toLowerCase().includes("chama a vanessa");
+    let joao_responde = msg.content.toLowerCase().includes("chama o joão");
+
     //remove bot trigger word from message
     if (antonio_responde) {
         console.log("dwitch to antonio trigger")
         voice=voice_male;
         character="António";
+        current_personality=personality_antonio;
         chatgpt({"role": "system", "content": "Prompt: A partir de agora és o António, uma personagem de poucas palavras mas um amor de pessoa e muito carinhoso. Acabaram de chamar por ti, anuncia a tua entrada. \n"},msg);
         return true
     }
     if (vanessa_responde) {
-        console.log("dwitch to antonio trigger")
+        console.log("switch to antonio trigger")
         voice=voice_female;
         character="Vanessa";
+        current_personality=personality_vanessa;
         chatgpt({"role": "system", "content": "Prompt: A partir de agora és novamente a Vanessa. Acabaram de chamar por ti, anuncia a tua entrada.\n"},msg);
         return true
     }
-
+    if (joao_responde) {
+        console.log("switch to joao trigger")
+        voice=voice_male;
+        character="João";
+        current_personality=personality_joao;
+        chatgpt({"role": "system", "content": "Prompt: A partir de agora és o João.\n"},msg);
+        return true
+    }
    mensagem_user=removeKeyword(msg.content,character);
     if (result_responde) {
         console.log("ChatGPT request:" + mensagem_user)
        
 
-chatgpt({"role": "system", "content": "character: "+ character +". Member name: "+ msg.author.username + " Prompt:" +  mensagem_user + ". \n"},msg);
+chatgpt({"role": "system", "content": "O membro "+ msg.author.username +" disse-te o seguinte:" +  mensagem_user + ". \n"},msg);
 
    // chatgpt({"role": "user", "content": + msg.content + ". \n"},msg);
     }
@@ -403,8 +421,6 @@ console.log('Package version: ' + VERSION);
 
 //get number of members in the voice channel
 
-    
-    
     
 }
 );
