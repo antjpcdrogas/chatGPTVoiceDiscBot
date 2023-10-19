@@ -110,7 +110,6 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         console.log(newState.member);
 
      
-
         chatgpt({"role": "system", "content": "O " + newState.member.user.username + " acabou de chegar, dá-lhe as boas vindas a miar, usando no máximo 6 palavras." + ". \n"},"False");
 
     }
