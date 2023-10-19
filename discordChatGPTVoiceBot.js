@@ -121,7 +121,6 @@ profanityFilter: false,
 
 function saveTextStream(textToSpeak, callback) {
     
-
     const speechConfig = sdk.SpeechConfig.fromSubscription(speech_key, "eastus");
     const speechSynthesizer = new sdk.SpeechSynthesizer(speechConfig, null);
     console.log("Azure TTS:")
