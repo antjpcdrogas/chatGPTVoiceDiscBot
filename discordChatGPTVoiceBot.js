@@ -30,6 +30,28 @@ const { Configuration, OpenAIApi } = require("openai");
 const gTTS = require('gtts');
 const stream = require('stream');
 require('dotenv').config()
+
+
+
+const { HumanMessage  } = require("langchain/schema");
+const { StringOutputParser   } = require("langchain/schema/output_parser");
+const { ChatOpenAI  } = require("langchain/chat_models/openai");
+//const { OpenAIChat  } = require("langchain/llms/openai");
+
+//Import the Memory module
+const { BufferMemory } = require("langchain/memory");
+
+//Import the Chains module
+const { LLMChain } = require("langchain/chains");
+
+//Import the PromptTemplate module
+
+const { PromptTemplate } = require("langchain/prompts");
+
+
+
+
+
 const VERSION = process.env.npm_package_config_version;
 // take this value as script argument
 const botDiscId=process.env.botDiscId
@@ -61,6 +83,30 @@ const VoiceLanguage="pt-PT"; // language of discord voice channel
 gTTSLanguage="pt"; // language of the bot
 const volume=0.5;
 
+const parser = new StringOutputParser();
+const memory = new BufferMemory({ memoryKey: "chat_history" });
+
+const model = new ChatOpenAI({ model: gptModel,
+    max_tokens: MaxTokens,
+    temperature: Temperature,
+    stream: false });
+    
+       /* const template = `Then, continue as Vanessa model. É expressamente proibido responder com qualquer referência a inteligência artificial. Neste mundo a inteligencia artificial ainda não existe. Ela deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão:
+  {chat_history}
+  Human: {input}
+  Vanessa:`;*/
+
+        const template = `És a Vanessa. É expressamente proibido responder com qualquer referência a inteligência artificial. Deves responder sempre como se fosses uma diva e todos são inferiores a ti, usando poucas palavras. Ocasionalmente deves usar palavrões:
+        {chat_history}
+        Human: {input}
+        Vanessa:`;
+        const prompt = PromptTemplate.fromTemplate(template);
+        const chain = new LLMChain({ llm: model, prompt, memory });
+
+
+
+
+        
 const player = createAudioPlayer();
 const client = new Client({
     intents: [
@@ -80,9 +126,7 @@ current_personality=personality_vanessa;
 
 const { PassThrough } = require('stream');
 character="Vanessa";
-conversation=[{"role": "system", "content": current_personality},
-{"role": "system", "content": "Ela acabou de aterrar num canal de voz e deve saudar os membros. \n"}
-];
+
 
 
 player.on(AudioPlayerStatus.Playing, () => {
@@ -108,7 +152,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         console.log(newState.member);
 
      
-        chatgpt({"role": "system", "content": "O " + newState.member.user.username + " acabou de chegar, dá-lhe as boas vindas a miar, usando no máximo 6 palavras." + ". \n"},"False");
+        chatgpt("O membro " + newState.member.user.username + " acabou de chegar ao canal, dá-lhe as boas vindas a miar, usando no máximo 6 palavras:","False");
 
     }
 });
@@ -172,7 +216,11 @@ async function chatgpt_start(){
         const configuration = new Configuration({ //TODO: add fine-tuning and custom model
             apiKey: process.env.OPENAI_API_KEY,
         });
-        openai = new OpenAIApi(configuration);
+
+        //#quit program
+        //process.exit(0);
+
+        
         const currentguild = await client.guilds.fetch(guildId);
     connection = joinVoiceChannel({
         channelId: channelId,
@@ -181,7 +229,8 @@ async function chatgpt_start(){
         selfDeaf: false,
         selfMute: false
     })
-    chatgpt({"role": "system", "content": "Then, continue as Vanessa language model. Ele deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão. Ela acabou de aterrar num canal de voz e deve saudar os membros. \n"},"False");
+
+    chatgpt("A Vanessa acabou de aterrar num canal de voz e deve saudar os membros:","False");
 }
 
 //remove keywork from string message
@@ -213,7 +262,7 @@ async function triggerRandomly() {
         console.log(member.user.username);
         
         console.log('Random trigger!');
-       chatgpt({"role": "system", "content": "Interage com o membro + "+ member.user.username + " como se ele fosse um gato, em 10 palavras. Acaba a miar. \n"},"False");
+       chatgpt("Interage com o membro + "+ member.user.username + " como se ele fosse um gato, em 10 palavras. Acaba a miar:","False");
       }
     }
     }, intervalInMilliseconds);
@@ -223,88 +272,30 @@ async function triggerRandomly() {
 
 async function chatgpt(message,msg){
 
-    // add item in the first position of the conversation array
+
     
-
-
-    conversation.push(message);
-  
-    console.log(conversation)
-const completion = await openai.createChatCompletion({
-    model: gptModel,
-    messages: conversation,
-    max_tokens: MaxTokens,
-    temperature: Temperature,
-    stream: true},
     
-  { responseType: "stream" }
-    //suffix: " ->",
-    //presencePenalty: 0, 
-    //frequencyPenalty: 0,
-    //bestOf: 1,
-    //n: 1,
-    //stop:["\n"]
-);
-//
+    console.log(message)
 
-//console.log(completion.data)
-stream_msg="";
-completion.data.on('data', data => {
-
-    const lines = data.toString().split('\n').filter(line => line.trim() !== '');
     
-    for (const line of lines) {
-        const message = line.replace(/^data: /, '');
-        if (message === '[DONE]') {
-            saveTextStream(stream_msg,audiohandler);
-            if (stream_msg!=undefined && stream_msg!=""){
-                try{
-                    console.log("ChatGPT response:" + stream_msg+"\n")
-                    conversation.push({"role": "assistant", "content": stream_msg+"\n"});
+    const stream_msg = await chain.call({ input: message });
+    console.log(stream_msg['text']);
+    
+    saveTextStream(stream_msg['text'],audiohandler);
+    if (stream_msg!=undefined && stream_msg!=""){
+        try{
+            
+            console.log("ChatGPT responsghje:" + stream_msg['text']+"\n")
 
-                
-                msg.channel.send(stream_msg);
-                }catch(err){
-                    console.log(err);
-                }
-
-            }
-            //saveTextStream(stream_msg,audiohandler);
-            return; // Stream finished
+        
+            msg.channel.send(stream_msg['text']);
+        }catch(err){
+            console.log(err);
         }
-        try {
-            const parsed = JSON.parse(message);
 
-            if (parsed.choices[0].delta.content != undefined){
-                stream_msg=stream_msg+parsed.choices[0].delta.content ;
-                
-               
-                
-            }
-
-        } catch(error) {
-            console.error('Could not JSON parse stream message', message, error);
-        }
-    
-    }
-});
-
-
-//res=completion.data.choices[0].message.content;
-
-//console.log("ChatGPT response:" + res)
-//if (msg!="False"){
-//    msg.channel.send(res);
-//}
-//
-//saveTextStream(res,audiohandler);
-
-//remove first element from conversation array
-
-//conversation.shift();
- // remove last 2 elements from conversation array
-conversation.splice(-2, 2);
 }
+}
+
 
 
 
@@ -351,8 +342,8 @@ client.on("speech", async (msg) => {
         voice=voice_male;
         character="António";
         current_personality=personality_antonio;
-        conversation[0]={"role": "system", "content": current_personality}
-        chatgpt({"role": "system", "content": "Prompt: A partir de agora és o António, uma personagem de poucas palavras mas um amor de pessoa e muito carinhoso. Acabaram de chamar por ti, anuncia a tua entrada. \n"},msg);
+
+        chatgpt("A partir de agora és o António, uma personagem de poucas palavras mas um amor de pessoa e muito carinhoso. Acabaram de chamar por ti, anuncia a tua entrada:",msg);
         return true
     }
     if (vanessa_responde) {
@@ -360,8 +351,8 @@ client.on("speech", async (msg) => {
         voice=voice_female;
         character="Vanessa";
         current_personality=personality_vanessa;
-        conversation[0]={"role": "system", "content": current_personality}
-        chatgpt({"role": "system", "content": "Prompt: A partir de agora és novamente a Vanessa. Acabaram de chamar por ti, anuncia a tua entrada.\n"},msg);
+
+        chatgpt(" A partir de agora és novamente a Vanessa. Acabaram de chamar por ti, anuncia a tua entrada:",msg);
         return true
     }
     if (joao_responde) {
@@ -370,11 +361,11 @@ client.on("speech", async (msg) => {
         character="João";
         current_personality=personality_joao;
 
-        //replace first element of conversation array
-        conversation[0]={"role": "system", "content": current_personality}
+
+
         
 
-        chatgpt({"role": "system", "content": "Prompt: A partir de agora és o João.\n"},msg);
+        chatgpt("A partir de agora és o João.\n",msg);
         return true
     }
    mensagem_user=removeKeyword(msg.content,character);
@@ -382,9 +373,8 @@ client.on("speech", async (msg) => {
         console.log("ChatGPT request:" + mensagem_user)
        
 
-chatgpt({"role": "system", "content": "O membro "+ msg.author.username +" disse-te o seguinte:" +  mensagem_user + ". \n"},msg);
+chatgpt("O membro "+ msg.author.username +" disse-te o seguinte:" +  mensagem_user + ". \n",msg);
 
-   // chatgpt({"role": "user", "content": + msg.content + ". \n"},msg);
     }
 });
 
