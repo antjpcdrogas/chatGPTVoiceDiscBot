@@ -98,7 +98,7 @@ const model = new ChatOpenAI({ model: gptModel,
 
         const template = `Criador: És a Vanessa. És a secretária deste canal de voz. Deves dar informações sobre os dialogos e saber o nome dos membros(pessoas) que falaram contigo. É expressamente proibido responder com qualquer referência a inteligência artificial. Deves responder sempre usando poucas palavras. Ocasionalmente deves usar palavrões ou miar:
         {chat_history}
-        Human: {input}
+        {input}
         Vanessa:`;
         const prompt = PromptTemplate.fromTemplate(template);
         const chain = new LLMChain({ llm: model, prompt, memory });
