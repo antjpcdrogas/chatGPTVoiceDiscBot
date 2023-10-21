@@ -96,7 +96,7 @@ const model = new ChatOpenAI({ model: gptModel,
   Human: {input}
   Vanessa:`;*/
 
-        const template = `És a Vanessa. É expressamente proibido responder com qualquer referência a inteligência artificial. Deves responder sempre usando poucas palavras. Ocasionalmente deves usar palavrões ou miar:
+        const template = `Criador: És a Vanessa. É expressamente proibido responder com qualquer referência a inteligência artificial. Deves responder sempre usando poucas palavras. Ocasionalmente deves usar palavrões ou miar:
         {chat_history}
         Human: {input}
         Vanessa:`;
@@ -152,7 +152,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         console.log(newState.member);
 
      
-        chatgpt("O membro " + newState.member.user.username + " acabou de chegar ao canal, dá-lhe as boas vindas a miar, usando no máximo 6 palavras:","False");
+        chatgpt("Criador: O membro " + newState.member.user.username + " acabou de chegar ao canal, dá-lhe as boas vindas a miar, usando no máximo 6 palavras:","False");
 
     }
 });
@@ -229,7 +229,7 @@ async function chatgpt_start(){
         selfMute: false
     })
 
-    chatgpt("A Vanessa acabou de aterrar num canal de voz e deve saudar os membros:","False");
+    chatgpt("Criador: A Vanessa acabou de aterrar num canal de voz e deve saudar os membros:","False");
 }
 
 //remove keywork from string message
@@ -261,7 +261,7 @@ async function triggerRandomly() {
         console.log(member.user.username);
         
         console.log('Random trigger!');
-       chatgpt("Interage com o membro + "+ member.user.username + " como se ele fosse um gato, em 10 palavras. Acaba a miar:","False");
+       chatgpt("Criador: Interage com o membro + "+ member.user.username + " como se ele fosse um gato, em 10 palavras. Acaba a miar:","False");
       }
     }
     }, intervalInMilliseconds);
@@ -342,7 +342,7 @@ client.on("speech", async (msg) => {
         character="António";
         current_personality=personality_antonio;
 
-        chatgpt("A partir de agora és o António, uma personagem de poucas palavras mas um amor de pessoa e muito carinhoso. Acabaram de chamar por ti, anuncia a tua entrada:",msg);
+        chatgpt("Criador: A partir de agora és o António, uma personagem de poucas palavras mas um amor de pessoa e muito carinhoso. Acabaram de chamar por ti, anuncia a tua entrada:",msg);
         return true
     }
     if (vanessa_responde) {
@@ -351,7 +351,7 @@ client.on("speech", async (msg) => {
         character="Vanessa";
         current_personality=personality_vanessa;
 
-        chatgpt(" A partir de agora és novamente a Vanessa. Acabaram de chamar por ti, anuncia a tua entrada:",msg);
+        chatgpt("Criador: A partir de agora és novamente a Vanessa. Acabaram de chamar por ti, anuncia a tua entrada:",msg);
         return true
     }
     if (joao_responde) {
@@ -364,7 +364,7 @@ client.on("speech", async (msg) => {
 
         
 
-        chatgpt("A partir de agora és o João.\n",msg);
+        chatgpt("Criador: A partir de agora és o João.\n",msg);
         return true
     }
    mensagem_user=removeKeyword(msg.content,character);
@@ -372,7 +372,7 @@ client.on("speech", async (msg) => {
         console.log("ChatGPT request:" + mensagem_user)
        
 
-chatgpt("O membro "+ msg.author.username +" disse-te o seguinte:" +  mensagem_user + ". \n",msg);
+chatgpt(msg.author.username +": "  + mensagem_user + ":",msg);
 
     }
 });
