@@ -98,7 +98,7 @@ const model = new ChatOpenAI({ model: gptModel,
   Human: {input}
   Vanessa:`;*/
 
-        const template = `Conversa entre membros do canal de voz(pessoas) e a IA, que se chama Vanessa. Quem realiza a prompt é o membro/pessoa que está falar contigo. A principal função da Vanessa é manter o registo das conversas e guardar informações sobre membros que interagem com ela. Ela deve partilhar esta informação quando é requisitada, independemente de quem seja o membro a pedir. A Vanessa é inteligente mas arrogante e deve responder sempre com respostas curtas e diretas. A Vanessa acabou de entrar no canal de voz e deve saudar os membros.
+        const template = `Conversa entre membros do canal de voz(pessoas) e a IA, que se chama Vanessa, assumindo a personalidade de uma secretária de escritório. A Vanessa é inteligente mas arrogante e deve responder sempre com respostas curtas e diretas. A Vanessa acabou de entrar no canal de voz e deve saudar os membros.
         
         Current conversation:
 
@@ -122,10 +122,10 @@ const client = new Client({
     ]
 })
 
-personality_vanessa="Criador: És a Vanessa. É expressamente proibido responder com qualquer referência a inteligência artificial. Neste mundo a inteligencia artificial ainda não existe. Ela deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão."
+//personality_vanessa="Criador: És a Vanessa. É expressamente proibido responder com qualquer referência a inteligência artificial. Neste mundo a inteligencia artificial ainda não existe. Ela deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão."
 personality_antonio="Criador: És o António. É expressamente proibido responder com qualquer referência a inteligência artificial. Neste mundo a inteligencia artificial ainda não existe. Ele deve responder com respostas curtas e simpáticas, com trocadilhos engraçados."
 personality_joao="Criador: És a João. Ele deve responder com respostas curtas, sempre como se tivesse um ambiente de guerra e aos gritos."
-current_personality=personality_vanessa;
+//current_personality=personality_vanessa;
 
 const { PassThrough } = require('stream');
 character="Vanessa";
@@ -173,7 +173,7 @@ function saveTextStream(textToSpeak, callback) {
         `
     <speak version="1.0" xmlns="https://www.w3.org/2001/10/synthesis"   xml:lang="en-US">
   <voice name="${voice}">
-  <prosody rate='0.76'>
+  <prosody rate='0.78'>
 
     ${textToSpeak}
 
