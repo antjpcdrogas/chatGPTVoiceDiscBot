@@ -33,6 +33,8 @@ require('dotenv').config()
 
 
 
+const { ConversationChain  } = require("langchain/chains");
+const { ConversationBufferMemory  } = require("langchain/memory");
 const { HumanMessage  } = require("langchain/schema");
 const { StringOutputParser   } = require("langchain/schema/output_parser");
 const { ChatOpenAI  } = require("langchain/chat_models/openai");
@@ -84,7 +86,7 @@ gTTSLanguage="pt"; // language of the bot
 const volume=0.5;
 
 const parser = new StringOutputParser();
-const memory = new BufferMemory({ memoryKey: "chat_history" });
+const memory = new BufferMemory({ memoryKey: "chat_history",ai_prefix: "Vanessa:", human_prefix: "Nome do membro:"});
 
 const model = new ChatOpenAI({ model: gptModel,
     max_tokens: MaxTokens,
@@ -96,7 +98,7 @@ const model = new ChatOpenAI({ model: gptModel,
   Human: {input}
   Vanessa:`;*/
 
-        const template = `O seguinte é uma conversação entre os membros de um canal de voz(pessoas) e a sua secretária, Vanessa(AI). A principal função da Vanessa é manter o registo das conversas e guardar informações sobre as pessoas que interagem com ela. A Vanessa é inteligente mas arrogante e deve responder sempre com respostas curtas e diretas. Por vezes a Vanessa recebe instruções do Criador, que devem ser obedecidas, sem nunca mencionar o Criador. A Vanessa acabou de entrar no canal de voz e deve saudar os membros.
+        const template = `O seguinte é uma conversação entre os membros de um canal de voz(pessoas) e a sua secretária, Vanessa(AI). A principal função da Vanessa é manter o registo das conversas e guardar informações sobre as pessoas que interagem com ela. Ela deve partilhar esta informação quando é requisitada, independemente de quem seja o membro a pedir. A Vanessa é inteligente mas arrogante e deve responder sempre com respostas curtas e diretas. Por vezes a Vanessa recebe instruções do Criador, que devem ser obedecidas, sem nunca mencionar o Criador. A Vanessa acabou de entrar no canal de voz e deve saudar os membros.
         
         Current conversation:
         Nome do membro: Olá Vanessa, como estás?
@@ -105,7 +107,8 @@ const model = new ChatOpenAI({ model: gptModel,
         {input}
         Vanessa:`;
         const prompt = PromptTemplate.fromTemplate(template);
-        const chain = new LLMChain({ llm: model, prompt, memory });
+       
+        const chain = new ConversationChain({ llm: model, prompt, memory });
 
 
         
@@ -279,16 +282,17 @@ async function chatgpt(message,msg){
 
     
     const stream_msg = await chain.call({ input: message });
-    console.log(stream_msg['text']);
+    response_text=stream_msg['response']
+    console.log(response_text);
     
-    saveTextStream(stream_msg['text'],audiohandler);
+    saveTextStream(response_text,audiohandler);
     if (stream_msg!=undefined && stream_msg!=""){
         try{
             
-            console.log("ChatGPT responsghje:" + stream_msg['text']+"\n")
+            console.log("ChatGPT responsghje:" + response_text+"\n")
 
         
-            msg.channel.send(stream_msg['text']);
+            msg.channel.send(response_text);
         }catch(err){
             console.log(err);
         }
@@ -373,7 +377,7 @@ client.on("speech", async (msg) => {
         console.log("ChatGPT request:" + mensagem_user)
        
 
-chatgpt(msg.author.username +": "  + mensagem_user + ":",msg);
+chatgpt(msg.author.username +": "  + mensagem_user + ".",msg);
 
     }
 });
