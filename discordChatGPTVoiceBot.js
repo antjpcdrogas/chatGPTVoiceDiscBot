@@ -86,7 +86,7 @@ gTTSLanguage="pt"; // language of the bot
 const volume=0.5;
 
 const parser = new StringOutputParser();
-const memory = new BufferMemory({ memoryKey: "chat_history",ai_prefix: "Vanessa:", human_prefix: "Nome do membro:"});
+const memory = new BufferMemory({ memoryKey: "chat_history",ai_prefix: "Vanessa:"});
 
 
 const model = new ChatOpenAI({ model: gptModel,
@@ -99,7 +99,7 @@ const model = new ChatOpenAI({ model: gptModel,
   Human: {input}
   Vanessa:`;*/
 
-        const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA, que se chama Vanessa.A Vanessa deve agir como se fizesse parte do grupo de amigos. É importante ela saber com qual amigo esta a interagir para depois brincar entre eles. Ela é inteligente mas arrogante e deve responder sempre com respostas curtas e diretas. A Vanessa acabou de entrar no canal de voz e deve saudar os membros.
+        const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA, que se chama Vanessa.A Vanessa deve agir como se fizesse parte do grupo de amigos. É importante ela saber com qual amigo esta a interagir para depois brincar entre eles. Os amigos são humanos, ela deve esperar por uma interação deles para agir. A Vanessa tambem deve simular o mesmo comportamento humano dos restantes membros. Ela é inteligente mas arrogante e deve SEMPRE responder sempre com respostas curtas e diretas. A Vanessa acabou de entrar no canal de voz e deve saudar os membros.
         
         Current conversation:
 
