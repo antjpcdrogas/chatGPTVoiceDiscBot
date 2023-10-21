@@ -106,8 +106,6 @@ const model = new ChatOpenAI({ model: gptModel,
         const chain = new LLMChain({ llm: model, prompt, memory });
 
 
-
-
         
 const player = createAudioPlayer();
 const client = new Client({
