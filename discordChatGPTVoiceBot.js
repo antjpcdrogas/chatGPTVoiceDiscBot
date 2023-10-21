@@ -173,7 +173,7 @@ function saveTextStream(textToSpeak, callback) {
         `
     <speak version="1.0" xmlns="https://www.w3.org/2001/10/synthesis"   xml:lang="en-US">
   <voice name="${voice}">
-  <prosody rate='0.78'>
+  <prosody rate='0.82'>
 
     ${textToSpeak}
 
