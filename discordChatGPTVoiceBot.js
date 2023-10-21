@@ -88,6 +88,7 @@ const volume=0.5;
 const parser = new StringOutputParser();
 const memory = new BufferMemory({ memoryKey: "chat_history",ai_prefix: "Vanessa:", human_prefix: "Nome do membro:"});
 
+
 const model = new ChatOpenAI({ model: gptModel,
     max_tokens: MaxTokens,
     temperature: Temperature,

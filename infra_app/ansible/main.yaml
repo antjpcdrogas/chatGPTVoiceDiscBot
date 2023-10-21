@@ -9,9 +9,9 @@
     - name: print hostname
       debug:
         msg: "{{hostname.stdout}}"
-    - name: apt update
-      apt:
-        update_cache: yes
+    #- name: apt update
+    #  apt:
+    #    update_cache: yes
     - name: install docker
       apt:
         name: docker.io
