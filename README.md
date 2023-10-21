@@ -10,11 +10,6 @@
 The issue happens in all OS, not only WSL2. The proposed fix is already implemented in the node_module folder located in this repo.
 ## Installation
 
-```sh
-$ npm install --save chatgptvoicediscbot
-```
-
-
 
 ## Features
 
@@ -25,6 +20,9 @@ $ npm install --save chatgptvoicediscbot
 - Replies by Voice
 - Works with multiple languages
 - Version 2 uses stream instead of files to play audio responses. ChatGPT response is also using stream. This update increase the response time by almost 3 seconds, makins the voice response almost instant.
+- Microsoft speech recognition sdk used to transform text-to-speech
+- João and Antonio personalities added
+- (Added in v3.0.1) Continuous conversation. Uses LangChain to store the conversation. Warning: it may be expensive
 ## Usage
 
 ```js
@@ -39,6 +37,7 @@ Environment variables:
 - botDiscId
 - channelId
 - guildId
+- SpeechKey
 ```
  
 ## Credits
