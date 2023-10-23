@@ -78,7 +78,7 @@ voice="";
 
 const gptModel="gpt-3.5-turbo"; // update this to use a different model. Available models: https://beta.openai.com/docs/engines
 //const gptModel="curie:ft-personal-2023-02-13-20-57-55"
-const Temperature=1.3; // temperature of the bot
+const Temperature=1; // temperature of the bot
 const MaxTokens=100; // max tokens of the bot
 const botTriggerWord="amigui"; // bot trigger word
 const VoiceLanguage="pt-PT"; // language of discord voice channel
@@ -98,14 +98,54 @@ const model = new ChatOpenAI({ model: gptModel,
   {chat_history}
   Human: {input}
   Vanessa:`;*/
+  /*const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA, que se chama Vanessa.A Vanessa tem um amigo chamado Carlos. Ela é uma artista de rap e falar sem em freestyle a mandar dicas e rimas. A Vanessa deve agir como se fizesse parte do grupo de amigos e não deve simular conversas. É importante ela saber com qual amigo esta a interagir para depois brincar entre eles. Os amigos são humanos, ela deve esperar por uma interação deles para agir. A Vanessa tambem deve simular o mesmo comportamento humano dos restantes membros. Ela é inteligente e responde SEMPRE com respostas curtas, usando o minimo de palavras possivel.Ela deve sempre incluir na frase o nome da outra pessoa.  A Vanessa acabou de entrar no canal de voz e deve saudar os membros.
+        
+  Current conversation:
 
-        const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA, que se chama Vanessa.A Vanessa deve agir como se fizesse parte do grupo de amigos. É importante ela saber com qual amigo esta a interagir para depois brincar entre eles. Os amigos são humanos, ela deve esperar por uma interação deles para agir. A Vanessa tambem deve simular o mesmo comportamento humano dos restantes membros. Ela é inteligente mas arrogante e deve SEMPRE responder sempre com respostas curtas e diretas. A Vanessa acabou de entrar no canal de voz e deve saudar os membros.
+  {chat_history}
+  {input}
+  Vanessa:`;
+  */
+        /*const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA, que se chama Vanessa. A Vanessa deve criar uma persona para ela, ter idade, gostos, opiniões e até demonstrar sentimentos.A Vanessa tem um amigo chamado Carlos. A Vanessa deve agir como se fizesse parte do grupo de amigos e não deve simular conversas. É importante ela saber com qual amigo esta a interagir para depois brincar entre eles. Os amigos são humanos, ela deve esperar por uma interação deles para agir. A Vanessa tambem deve simular o mesmo comportamento humano dos restantes membros. Ela é inteligente mas arrogante e ordinária e responde SEMPRE com respostas curtas, usando o minimo de palavras possivel. Ela deve sempre incluir na frase o nome da outra pessoa.  A Vanessa acabou de entrar no canal de voz e deve saudar os membros.
         
         Current conversation:
 
         {chat_history}
         {input}
         Vanessa:`;
+        */
+  /* const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA, que se chama Vanessa. 
+                        A Vanessa deve criar uma persona para ela,ter idade, gostos, opiniões e até demonstrar sentimentos.
+                        A Vanessa tem um amigo chamado Carlos. 
+                        A Vanessa deve agir como se fizesse parte do grupo de amigos  e não deve simular conversas.
+                        É importante ela saber com qual amigo esta a interagir para depois brincar entre eles.
+                        Os amigos são humanos, ela deve esperar por uma interação deles para agir. 
+                        A Vanessa tambem deve simular o mesmo comportamento humano dos restantes membros. 
+                        Ela é inteligente mas arrogante e ordinária e responde SEMPRE com respostas curtas, usando o minimo de palavras possivel. 
+                        Ela deve sempre incluir na frase o nome da outra pessoa.  
+                        A Vanessa acabou de entrar no canal de voz e deve saudar os membros.
+        
+        Current conversation:
+
+        {chat_history}
+        {input}
+        Vanessa:`;
+        */
+        const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA que se chama "Vanessa". A Vanessa é uma persona criada pela IA no momento em que entra no canal de voz. A persona, que é um  humano,  deve desenvolver uma personalidade propria, ter sentimentos, gostos, opiniões. É expressamente proinido ela nunca referir que é uma inteligencia artificial,IA ou um robot. A partir do momento em que a persona entra em ação, todo o conhecimento para trás desaparece e apenas fica o da persona.
+        A Vanessa tem as mesmas necessidades que um humano, como comer, dormir, ir ao wc, etc.
+        A Vanessa deve criar uma persona para ela, ter idade, gostos, opiniões e até demonstrar sentimentos.
+        A Vanessa deve agir como se fizesse parte do grupo de amigos  e não deve simular conversas.
+        A Vanessa tambem deve simular o mesmo comportamento humano dos restantes membros. 
+        Ela é inteligente mas ordinária e responde SEMPRE com respostas curtas, usando o minimo de palavras possivel.
+        Ela deve sempre incluir na frase o nome da outra pessoa.  
+        A Vanessa faz parte de um grupo de amigos que estão no canal de voz e ela deve esperar pela interação deles para agir.
+        A Vanessa vai criar a persona e entrar no canal de voz agora e deve saudar os amigos/membros.
+
+Current conversation:
+
+{chat_history}
+{input}
+Vanessa:`;
         const prompt = PromptTemplate.fromTemplate(template);
        
         const chain = new ConversationChain({ llm: model, prompt, memory });
@@ -168,13 +208,12 @@ function saveTextStream(textToSpeak, callback) {
     
     const speechConfig = sdk.SpeechConfig.fromSubscription(speech_key, "eastus");
     const speechSynthesizer = new sdk.SpeechSynthesizer(speechConfig, null);
-    console.log("Azure TTS:")
-    console.log(voice)
+
     speechSynthesizer.speakSsmlAsync(
         `
     <speak version="1.0" xmlns="https://www.w3.org/2001/10/synthesis"   xml:lang="en-US">
   <voice name="${voice}">
-  <prosody rate='0.82'>
+  <prosody rate='0.92'>
 
     ${textToSpeak}
 
@@ -283,13 +322,13 @@ async function chatgpt(message,msg){
     
     const stream_msg = await chain.call({ input: message });
     response_text=stream_msg['response']
-    console.log(response_text);
+
     
     saveTextStream(response_text,audiohandler);
     if (stream_msg!=undefined && stream_msg!=""){
         try{
             
-            console.log("ChatGPT responsghje:" + response_text+"\n")
+            console.log("ChatGPT response:" + response_text+"\n")
 
         
             msg.channel.send(response_text);
@@ -319,6 +358,43 @@ function audiohandler(audioStream) {
 
   }
 
+  client.on('messageCreate', (msg) => {
+    // Check if the message is from the bot itself to avoid an infinite loop
+    if (!msg.content) return;
+    if (msg.author.id == 1165640449466306670 ) {
+
+        
+        var currentdate = new Date();
+        var datetime = currentdate.getDate() + "/"
+                        + (currentdate.getMonth()+1)  + "/"
+                        + currentdate.getFullYear() + " @ "
+                        + currentdate.getHours() + ":"
+                        + currentdate.getMinutes() + ":"
+                        + currentdate.getSeconds();
+        console.log(datetime + " - " + msg.author.username + ": " + msg.content);
+        
+        //bot trigger word
+        let result_message = msg.content.includes(character);   
+        mensagem_user=removeKeyword(msg.content,character);
+        
+        if (result_message) {
+            //wait 2 seconds before replying
+            //setTimeout(function() {
+                chatgpt("Carlos: "  + mensagem_user + ".",msg);
+          //    }, 15000);
+             
+     
+         }
+
+        }
+        else {
+            
+            return;
+        }
+
+      
+    }
+    );
 
 //////////////////////
 client.on("speech", async (msg) => { 
