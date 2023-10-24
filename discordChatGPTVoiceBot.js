@@ -218,7 +218,7 @@ function saveTextStream(textToSpeak, callback) {
             if (result) {
                 synthesizer.close();
                 const stream = new PassThrough();
-                stream.end(result.audioData);
+                stream.end(Buffer.from(result.audioData));
                 callback(stream);
             }
         },
