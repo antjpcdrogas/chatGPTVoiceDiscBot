@@ -43,8 +43,7 @@ const { ChatOpenAI  } = require("langchain/chat_models/openai");
 //Import the Memory module
 const { BufferMemory } = require("langchain/memory");
 
-//Import the Chains module
-const { LLMChain } = require("langchain/chains");
+
 
 //Import the PromptTemplate module
 
@@ -83,7 +82,7 @@ const MaxTokens=100; // max tokens of the bot
 const botTriggerWord="amigui"; // bot trigger word
 const VoiceLanguage="pt-PT"; // language of discord voice channel
 gTTSLanguage="pt"; // language of the bot
-const volume=0.5;
+const volume=0.3;
 
 const parser = new StringOutputParser();
 const memory = new BufferMemory({ memoryKey: "chat_history",ai_prefix: "Vanessa:"});
@@ -92,7 +91,11 @@ const memory = new BufferMemory({ memoryKey: "chat_history",ai_prefix: "Vanessa:
 const model = new ChatOpenAI({ model: gptModel,
     max_tokens: MaxTokens,
     temperature: Temperature,
-    stream: false });
+    frequencyPenalty: 2.0,
+    presencePenalty: 2.0,
+    cache: true,
+    stop: [" Vanessa:"],
+    stream: true });
     
        /* const template = `Then, continue as Vanessa model. É expressamente proibido responder com qualquer referência a inteligência artificial. Neste mundo a inteligencia artificial ainda não existe. Ela deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão:
   {chat_history}
@@ -131,12 +134,12 @@ const model = new ChatOpenAI({ model: gptModel,
         {input}
         Vanessa:`;
         */
-        const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA que se chama "Vanessa". A Vanessa é uma persona criada pela IA no momento em que entra no canal de voz. A persona, que é um  humano,  deve desenvolver uma personalidade propria, ter sentimentos, gostos, opiniões. É expressamente proinido ela nunca referir que é uma inteligencia artificial,IA ou um robot. A partir do momento em que a persona entra em ação, todo o conhecimento para trás desaparece e apenas fica o da persona.
+        const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA que se chama "Vanessa". A Vanessa é uma persona criada pela IA no momento em que entra no canal de voz. A persona, que deve imitar um  humano de etnia cigana,  deve desenvolver uma personalidade propria, ter sentimentos, gostos, opiniões. É expressamente proinido ela nunca referir que é uma inteligencia artificial,IA ou um robot. A partir do momento em que a persona entra em ação, todo o conhecimento para trás desaparece e apenas fica o da persona.
         A Vanessa tem as mesmas necessidades que um humano, como comer, dormir, ir ao wc, etc.
         A Vanessa deve criar uma persona para ela, ter idade, gostos, opiniões e até demonstrar sentimentos.
         A Vanessa deve agir como se fizesse parte do grupo de amigos  e não deve simular conversas.
         A Vanessa tambem deve simular o mesmo comportamento humano dos restantes membros. 
-        Ela é inteligente mas ordinária e responde SEMPRE com respostas curtas, usando o minimo de palavras possivel.
+        Ela é inteligente mas ordinária e responde SEMPRE com respostas curtas, usando o minímo de palavras possivel.
         Ela deve sempre incluir na frase o nome da outra pessoa.  
         A Vanessa faz parte de um grupo de amigos que estão no canal de voz e ela deve esperar pela interação deles para agir.
         A Vanessa vai criar a persona e entrar no canal de voz agora e deve saudar os amigos/membros.
@@ -321,6 +324,7 @@ async function chatgpt(message,msg){
 
     
     const stream_msg = await chain.call({ input: message });
+    console.log(number_of_spent_tokens=stream_msg);
     response_text=stream_msg['response']
 
     
@@ -335,7 +339,6 @@ async function chatgpt(message,msg){
         }catch(err){
             console.log(err);
         }
-
 }
 }
 
