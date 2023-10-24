@@ -208,50 +208,24 @@ profanityFilter: false,
 });
 
 function saveTextStream(textToSpeak, callback) {
-    
     const speechConfig = sdk.SpeechConfig.fromSubscription(speech_key, "eastus");
-    const speechSynthesizer = new sdk.SpeechSynthesizer(speechConfig, null);
+    const audioConfig = sdk.AudioConfig.fromDefaultSpeakerOutput();
+    const synthesizer = new sdk.SpeechSynthesizer(speechConfig, audioConfig);
 
-    speechSynthesizer.speakSsmlAsync(
-        `
-    <speak version="1.0" xmlns="https://www.w3.org/2001/10/synthesis"   xml:lang="en-US">
-  <voice name="${voice}">
-  <prosody rate='0.92'>
-
-    ${textToSpeak}
-
-    </prosody>
-  </voice>
-</speak>
-  `,
+    synthesizer.speakTextAsync(
+        textToSpeak,
         result => {
-          const { audioData } = result;
-          speechSynthesizer.close();
-      
-          // convert arrayBuffer to stream
-          const bufferStream = new PassThrough();
-          bufferStream.end(Buffer.from(audioData));
-          callback(bufferStream);
-          //return bufferStream;
+            if (result) {
+                synthesizer.close();
+                callback(result.audioData);
+            }
         },
         error => {
-          console.log("ERROR");
-          console.log(error);
-          speechSynthesizer.close();
+            console.log(`Error: ${error}`);
+            synthesizer.close();
         }
-      );
-
-
-    try {
- 
-      // Call the callback function with the audio stream
-      
-        
-    } catch(err) {
-      console.log("Not able to read text, try again.");
-      console.log(err);
-    }
-  }
+    );
+}
      
 
 
