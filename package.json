@@ -12,6 +12,7 @@
     "express": "^4.18.2",
     "ffmpeg-static": "^5.1.0",
     "gtts": "^0.2.1",
+    "instagram-graph-api": "^5.0.1",
     "langchain": "^0.0.169",
     "microsoft-cognitiveservices-speech-sdk": "^1.27.0",
     "openai": "^3.2.0"

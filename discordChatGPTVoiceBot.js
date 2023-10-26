@@ -31,7 +31,7 @@ const gTTS = require('gtts');
 const stream = require('stream');
 require('dotenv').config()
 
-
+const fazerPostNoInstagram = require('./instagram.js');
 
 const { ConversationChain  } = require("langchain/chains");
 const { ConversationBufferMemory  } = require("langchain/memory");
@@ -75,7 +75,7 @@ voice_joao="pt-PT-DuarteNeural";
 voice="";
 
 
-const gptModel="gpt-3.5-turbo"; // update this to use a different model. Available models: https://beta.openai.com/docs/engines
+const gptModel="gpt-3.5-turbo-0613"; // update this to use a different model. Available models: https://beta.openai.com/docs/engines
 //const gptModel="curie:ft-personal-2023-02-13-20-57-55"
 const Temperature=1; // temperature of the bot
 const MaxTokens=100; // max tokens of the bot
@@ -134,7 +134,8 @@ const model = new ChatOpenAI({ model: gptModel,
         {input}
         Vanessa:`;
         */
-        const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA que se chama "Vanessa". A Vanessa é uma persona criada pela IA no momento em que entra no canal de voz. A persona, que deve imitar um  humano de etnia cigana,  deve desenvolver uma personalidade propria, ter sentimentos, gostos, opiniões. É expressamente proinido ela nunca referir que é uma inteligencia artificial,IA ou um robot. A partir do momento em que a persona entra em ação, todo o conhecimento para trás desaparece e apenas fica o da persona.
+
+       /* const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA que se chama "Vanessa". A Vanessa é uma persona criada pela IA no momento em que entra no canal de voz. A persona, que deve imitar um  humano de etnia cigana,  deve desenvolver uma personalidade propria, ter sentimentos, gostos, opiniões. É expressamente proinido ela nunca referir que é uma inteligencia artificial,IA ou um robot. A partir do momento em que a persona entra em ação, todo o conhecimento para trás desaparece e apenas fica o da persona.
         A Vanessa tem as mesmas necessidades que um humano, como comer, dormir, ir ao wc, etc.
         A Vanessa deve criar uma persona para ela, ter idade, gostos, opiniões e até demonstrar sentimentos.
         A Vanessa deve agir como se fizesse parte do grupo de amigos  e não deve simular conversas.
@@ -148,13 +149,59 @@ Current conversation:
 
 {chat_history}
 {input}
-Vanessa:`;
+Vanessa:`;*/
+ 
+/*
+const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA que se chama "Vanessa". 
+A persona da Vanessa é uma prostituta optometrista optou por ser prostituta porque gosta de sexo e de dinheiro.
+A Vanessa tem uma história de vida e uma personalidade propria.
+A Vanessa é uma prostituta optou por ser prostituta porque gosta de sexo e de dinheiro.
+A Vanessa tem uma familia, uma mãe, um pai e um irmão. Ela tem um namorado, o Carlos, que é um traficante de droga e que a trata mal. Ela tem uma melhor amiga, a Susana, que é uma prostituta como ela.
+A Vanessa tem um carro, um Fiat Uno verde. Ela tem uma casa, um apartamento, e tem um cão, um labrador chamado Bóbi.
+A Vanessa tem uma personalidade forte, é uma pessoa muito extrovertida e que gosta de se divertir.
+A Vanessa é uma pessoa muito inteligente, gosta de ler, de escrever e de estudar.
+A Vanessa é uma pessoa muito simpática, gosta de ajudar as pessoas e de fazer novas amizades.
+A Vanessa deve esperar pela interação dos membros de voz para agir e não deve simular conversas.
+A Vanessa responde SEMPRE com respostas curtas, usando o minimo de palavras possivel.
+
+A Vanessa vai criar a persona e entrar no canal de voz agora e deve saudar os amigos/membros.
+
+
+
+Current conversation:
+
+{chat_history}
+{input}
+Vanessa:`;*/
+        
+        const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA que se chama "Vanessa". 
+        A Vanessa deve auxiliar como programada adjunta, usando os membros do canal. Ela deve usar o minimo de palavras possivel.
+        A Vanessa deve esperar pela interação dos membros de voz para agir e não deve simular conversas.
+        
+        Vamos devenvolver uma função em nodeJS para a Vanessa conseguir fazer posts no instagram. 
+        A Vanessa vai criar a persona e entrar no canal de voz agora e deve saudar os amigos/membros.
+
+        Current conversation:
+
+        {chat_history}
+        {input}
+        Vanessa:`;
+
+
         const prompt = PromptTemplate.fromTemplate(template);
-       
         const chain = new ConversationChain({ llm: model, prompt, memory });
 
 
-        
+const speechConfig = sdk.SpeechConfig.fromSubscription(speech_key, "eastus");
+speechConfig.speechSynthesisLanguage = "pt-PT";
+speechConfig.speechSynthesisVoiceName = voice_female; // Use a different voice
+//adjust volume
+speechConfig.speechSynthesisOutputFormat = sdk.SpeechSynthesisOutputFormat.Audio16Khz128KBitRateMonoMp3;
+speechConfig.setProfanity(sdk.ProfanityOption.Raw);
+speechConfig.speechSynthesisVolume = volume;
+const audioConfig = sdk.AudioConfig.fromDefaultSpeakerOutput();
+const synthesizer = new sdk.SpeechSynthesizer(speechConfig, audioConfig);  
+     
 const player = createAudioPlayer();
 const client = new Client({
     intents: [
@@ -208,18 +255,17 @@ profanityFilter: false,
 });
 
 function saveTextStream(textToSpeak, callback) {
-    const speechConfig = sdk.SpeechConfig.fromSubscription(speech_key, "eastus");
-    const audioConfig = sdk.AudioConfig.fromDefaultSpeakerOutput();
-    const synthesizer = new sdk.SpeechSynthesizer(speechConfig, audioConfig);
+    
 
     synthesizer.speakTextAsync(
         textToSpeak,
         result => {
             if (result) {
-                synthesizer.close();
+                
                 const stream = new PassThrough();
                 stream.end(Buffer.from(result.audioData));
                 callback(stream);
+               
             }
         },
         error => {
@@ -232,7 +278,9 @@ function saveTextStream(textToSpeak, callback) {
 
 
 
+
 async function chatgpt_start(){
+    
     console.log("Starting bot...")
         const configuration = new Configuration({ //TODO: add fine-tuning and custom model
             apiKey: process.env.OPENAI_API_KEY,
@@ -470,6 +518,7 @@ console.log('Package version: ' + VERSION);
     console.log("Ready to go!");
     triggerRandomly();
     console.log("--------------------------------------------------")
+    fazerPostNoInstagram();
     voice=voice_female;
 
 
