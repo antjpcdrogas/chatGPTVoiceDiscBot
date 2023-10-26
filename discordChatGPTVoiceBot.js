@@ -16,89 +16,65 @@
 // 5. Join the channel to hear a personalized greeting from the bot
 // 6. Say the trigger word "reply" to get a response from the bot
 ////////////////////////////////////////////////////////////////////////////////////////
-const { Client, GatewayIntentBits} = require('discord.js')
+const { Client, GatewayIntentBits } = require('discord.js');
 const { addSpeechEvent } = require("discord-speech-recognition");
-const { joinVoiceChannel } = require('@discordjs/voice');
-const { createAudioPlayer } = require('@discordjs/voice');
-const { createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
+const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
 const sdk = require("microsoft-cognitiveservices-speech-sdk");
-
-
-var fs = require('fs');
-const parse = require("@fortaine/fetch-event-source/parse");
+const fs = require('fs');
 const { Configuration, OpenAIApi } = require("openai");
 const gTTS = require('gtts');
 const stream = require('stream');
-require('dotenv').config()
+require('dotenv').config();
 
-
-
-const { ConversationChain  } = require("langchain/chains");
-const { ConversationBufferMemory  } = require("langchain/memory");
-const { HumanMessage  } = require("langchain/schema");
-const { StringOutputParser   } = require("langchain/schema/output_parser");
-const { ChatOpenAI  } = require("langchain/chat_models/openai");
-//const { OpenAIChat  } = require("langchain/llms/openai");
-
-//Import the Memory module
+const { ConversationChain } = require("langchain/chains");
+const { ConversationBufferMemory } = require("langchain/memory");
+const { HumanMessage } = require("langchain/schema");
+const { StringOutputParser } = require("langchain/schema/output_parser");
+const { ChatOpenAI } = require("langchain/chat_models/openai");
 const { BufferMemory } = require("langchain/memory");
-
-
-
-//Import the PromptTemplate module
-
 const { PromptTemplate } = require("langchain/prompts");
 
-
-
-
-
 const VERSION = process.env.npm_package_config_version;
-// take this value as script argument
-const botDiscId=process.env.botDiscId
-const channelId=process.env.channelId
-const guildId=process.env.guildId
-const speech_key=process.env.SPEECH_KEY
-
+const botDiscId = process.env.botDiscId;
+const channelId = process.env.channelId;
+const guildId = process.env.guildId;
+const speech_key = process.env.SPEECH_KEY;
 
 const EventSource = require('eventsource');
 const url = 'https://api.openai.com/v1/chat/completions';
 const headers = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+  'Content-Type': 'application/json',
+  Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
 };
 
+const voice_female = "pt-BR-FranciscaNeural";
+const voice_male = "pt-BR-AntonioNeural";
+const voice_joao = "pt-PT-DuarteNeural";
+let voice = "";
 
-voice_female="pt-BR-FranciscaNeural";
-voice_male="pt-BR-AntonioNeural";
-voice_joao="pt-PT-DuarteNeural";
-voice="";
-
-
-const gptModel="gpt-3.5-turbo-0613"; // update this to use a different model. Available models: https://beta.openai.com/docs/engines
-//const gptModel="curie:ft-personal-2023-02-13-20-57-55"
-const Temperature=1; // temperature of the bot
-const MaxTokens=100; // max tokens of the bot
-const botTriggerWord="amigui"; // bot trigger word
-const VoiceLanguage="pt-PT"; // language of discord voice channel
-gTTSLanguage="pt"; // language of the bot
-const volume=0.3;
+const gptModel = "gpt-3.5-turbo-0613";
+const Temperature = 1;
+const MaxTokens = 100;
+const botTriggerWord = "amigui";
+const VoiceLanguage = "pt-PT";
+const gTTSLanguage = "pt";
+const volume = 0.3;
 
 const parser = new StringOutputParser();
-const memory = new BufferMemory({ memoryKey: "chat_history",ai_prefix: "Vanessa:"});
+const memory = new BufferMemory({ memoryKey: "chat_history", ai_prefix: "Vanessa:" });
 
+const model = new ChatOpenAI({
+  model: gptModel,
+  max_tokens: MaxTokens,
+  temperature: Temperature,
+  frequencyPenalty: 2.0,
+  presencePenalty: 2.0,
+  cache: true,
+  stop: [" Vanessa:"],
+  stream: true
+});
 
-const model = new ChatOpenAI({ model: gptModel,
-    max_tokens: MaxTokens,
-    temperature: Temperature,
-    frequencyPenalty: 2.0,
-    presencePenalty: 2.0,
-    cache: true,
-    stop: [" Vanessa:"],
-    stream: true });
-    
-        
-        const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA que se chama "Vanessa". 
+const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA que se chama "Vanessa". 
         A Vanessa deve auxiliar como programada adjunta, usando os membros do canal. Ela deve usar o minimo de palavras possivel.
         A Vanessa deve esperar pela interação dos membros de voz para agir e não deve simular conversas.
         
@@ -111,391 +87,238 @@ const model = new ChatOpenAI({ model: gptModel,
         {input}
         Vanessa:`;
 
-
-        const prompt = PromptTemplate.fromTemplate(template);
-        const chain = new ConversationChain({ llm: model, prompt, memory });
-
+const prompt = PromptTemplate.fromTemplate(template);
+const chain = new ConversationChain({ llm: model, prompt, memory });
 
 const speechConfig = sdk.SpeechConfig.fromSubscription(speech_key, "eastus");
 speechConfig.speechSynthesisLanguage = "pt-PT";
-speechConfig.speechSynthesisVoiceName = voice_female; // Use a different voice
-//adjust volume
+speechConfig.speechSynthesisVoiceName = voice_female;
 speechConfig.speechSynthesisOutputFormat = sdk.SpeechSynthesisOutputFormat.Audio16Khz128KBitRateMonoMp3;
 speechConfig.setProfanity(sdk.ProfanityOption.Raw);
 speechConfig.speechSynthesisVolume = volume;
 const audioConfig = sdk.AudioConfig.fromDefaultSpeakerOutput();
-const synthesizer = new sdk.SpeechSynthesizer(speechConfig, audioConfig);  
-     
+const synthesizer = new sdk.SpeechSynthesizer(speechConfig, audioConfig);
+
 const player = createAudioPlayer();
 const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildVoiceStates,
-        GatewayIntentBits.GuildPresences
-    ]
-})
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildPresences
+  ]
+});
 
-//personality_vanessa="Criador: És a Vanessa. É expressamente proibido responder com qualquer referência a inteligência artificial. Neste mundo a inteligencia artificial ainda não existe. Ela deve responder com respostas curtas, usando poucas palavras,terminando com um palavrão."
-personality_antonio="Criador: És o António. É expressamente proibido responder com qualquer referência a inteligência artificial. Neste mundo a inteligencia artificial ainda não existe. Ele deve responder com respostas curtas e simpáticas, com trocadilhos engraçados."
-personality_joao="Criador: És a João. Ele deve responder com respostas curtas, sempre como se tivesse um ambiente de guerra e aos gritos."
-//current_personality=personality_vanessa;
-
-const { PassThrough } = require('stream');
-character="Vanessa";
-
-
+let character = "Vanessa";
 
 player.on(AudioPlayerStatus.Playing, () => {
-    console.log('The audio player has started playing!');
+  console.log('The audio player has started playing!');
 });
-
 
 client.on('voiceStateUpdate', async (oldState, newState) => {
-    //console.log(oldState, newState);
-    // do nothing if the user is the bot id
-    if (newState.member.user.id === botDiscId) return;
-    if (newState.channelId === channelId && (oldState.channelId === null || oldState.channelId !== newState.channelId)) { // User Joins a voice channel. Ignore all others events not related with the target channel
-        // User Joins a voice channel
-        console.log("someone joined channel");
-        const currentguild = await client.guilds.fetch(guildId);
-        connection = joinVoiceChannel({
-            channelId: channelId,
-            guildId: guildId,
-            adapterCreator: currentguild.voiceAdapterCreator,
-            selfDeaf: false,
-            selfMute: false
-        });
-        console.log(newState.member);
-
-     
-        chatgpt("Criador: O membro " + newState.member.user.username + " acabou de chegar ao canal, dá-lhe as boas vindas a miar, usando no máximo 6 palavras:","False");
-
-    }
+  if (newState.member.user.id === botDiscId) return;
+  if (newState.channelId === channelId && (oldState.channelId === null || oldState.channelId !== newState.channelId)) {
+    console.log("someone joined channel");
+    const currentguild = await client.guilds.fetch(guildId);
+    connection = joinVoiceChannel({
+      channelId: channelId,
+      guildId: guildId,
+      adapterCreator: currentguild.voiceAdapterCreator,
+      selfDeaf: false,
+      selfMute: false
+    });
+    console.log(newState.member);
+    chatgpt("Criador: O membro " + newState.member.user.username + " acabou de chegar ao canal, dá-lhe as boas vindas a miar, usando no máximo 6 palavras:", "False");
+  }
 });
-addSpeechEvent(client, { lang: VoiceLanguage ,
-profanityFilter: false,
-});
+
+addSpeechEvent(client, { lang: VoiceLanguage, profanityFilter: false });
 
 function saveTextStream(textToSpeak, callback) {
-    
-
-    synthesizer.speakTextAsync(
-        textToSpeak,
-        result => {
-            if (result) {
-                
-                const stream = new PassThrough();
-                stream.end(Buffer.from(result.audioData));
-                callback(stream);
-               
-            }
-        },
-        error => {
-            console.log(`Error: ${error}`);
-            synthesizer.close();
-        }
-    );
-}
-     
-
-
-
-
-async function chatgpt_start(){
-    
-    console.log("Starting bot...")
-        const configuration = new Configuration({ //TODO: add fine-tuning and custom model
-            apiKey: process.env.OPENAI_API_KEY,
-        });
-
-        //#quit program
-        //process.exit(0);
-
-        
-        const currentguild = await client.guilds.fetch(guildId);
-    connection = joinVoiceChannel({
-        channelId: channelId,
-        guildId: guildId,
-        adapterCreator: currentguild.voiceAdapterCreator,
-        selfDeaf: false,
-        selfMute: false
-    })
-
-    chatgpt("Criador: A Vanessa acabou de aterrar num canal de voz e deve saudar os membros:","False");
-}
-
-//remove keywork from string message
-function removeKeyword(message,keyword){
-    var index = message.indexOf(keyword);
-    if (index > -1) {
-        message = message.substring(0, index) + message.substring(index + keyword.length);
-
+  synthesizer.speakTextAsync(
+    textToSpeak,
+    result => {
+      if (result) {
+        const stream = new stream.PassThrough();
+        stream.end(Buffer.from(result.audioData));
+        callback(stream);
+      }
+    },
+    error => {
+      console.log(`Error: ${error}`);
+      synthesizer.close();
     }
-    return message;
+  );
 }
+
+async function chatgpt_start() {
+  console.log("Starting bot...");
+  const configuration = new Configuration({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+  const currentguild = await client.guilds.fetch(guildId);
+  connection = joinVoiceChannel({
+    channelId: channelId,
+    guildId: guildId,
+    adapterCreator: currentguild.voiceAdapterCreator,
+    selfDeaf: false,
+    selfMute: false
+  });
+  chatgpt("Criador: A Vanessa acabou de aterrar num canal de voz e deve saudar os membros:", "False");
+}
+
+function removeKeyword(message, keyword) {
+  const index = message.indexOf(keyword);
+  if (index > -1) {
+    message = message.substring(0, index) + message.substring(index + keyword.length);
+  }
+  return message;
+}
+
 async function triggerRandomly() {
-
-
-    const intervalInMinutes = 60 / 2; // 5 times per hour
-    const intervalInMilliseconds = intervalInMinutes * 60 * 1000; // convert to milliseconds
-  
-    setInterval(() => {
-      const randomNumber = Math.random();
-      const channel = client.channels.cache.get("419977920249987097");
-      const members = channel.members;
-      // trigger something randomly based on the random number
-      if (members.size > 1){
+  const intervalInMinutes = 60 / 2;
+  const intervalInMilliseconds = intervalInMinutes * 60 * 1000;
+  setInterval(() => {
+    const randomNumber = Math.random();
+    const channel = client.channels.cache.get("419977920249987097");
+    const members = channel.members;
+    if (members.size > 1) {
       if (randomNumber < 0.4) {
-        random_members=members
+        random_members = members;
         random_members.delete(botDiscId);
         const member = random_members.random();
-
         console.log(member.user.username);
-        
         console.log('Random trigger!');
-       chatgpt("Criador: Interage com o membro + "+ member.user.username + " como se ele fosse um gato, em 10 palavras. Acaba a miar:","False");
+        chatgpt("Criador: Interage com o membro + " + member.user.username + " como se ele fosse um gato, em 10 palavras. Acaba a miar:", "False");
       }
     }
-    }, intervalInMilliseconds);
+  }, intervalInMilliseconds);
+}
+
+async function chatgpt(message, msg) {
+  console.log(message);
+  const stream_msg = await chain.call({ input: message });
+  console.log(number_of_spent_tokens = stream_msg);
+  response_text = stream_msg['response'];
+  saveTextStream(response_text, audiohandler);
+  if (stream_msg != undefined && stream_msg != "") {
+    try {
+      console.log("ChatGPT response:" + response_text + "\n");
+      msg.channel.send(response_text);
+    } catch (err) {
+      console.log(err);
+    }
   }
-
-
-
-async function chatgpt(message,msg){
-
-
-    
-    
-    console.log(message)
-
-    
-    const stream_msg = await chain.call({ input: message });
-    console.log(number_of_spent_tokens=stream_msg);
-    response_text=stream_msg['response']
-
-    
-    saveTextStream(response_text,audiohandler);
-    if (stream_msg!=undefined && stream_msg!=""){
-        try{
-            
-            console.log("ChatGPT response:" + response_text+"\n")
-
-        
-            msg.channel.send(response_text);
-        }catch(err){
-            console.log(err);
-        }
 }
-}
-
-
-
 
 function audiohandler(audioStream) {
-    const audioPlayer = createAudioPlayer();
-    // Create a new ReadableStream from the audio stream
-    var stream = new PassThrough();
-    audioStream.pipe(stream);
-  
-    // Play the stream in the current voice connection
+  const audioPlayer = createAudioPlayer();
+  const stream = new stream.PassThrough();
+  audioStream.pipe(stream);
+  const resource = createAudioResource(stream);
+  audioPlayer.play(resource);
+  connection.subscribe(audioPlayer);
+}
 
-
-    const resource = createAudioResource(stream);
-
-    audioPlayer.play(resource);
-    connection.subscribe(audioPlayer);
-
-  }
-
-  client.on('messageCreate', (msg) => {
-    // Check if the message is from the bot itself to avoid an infinite loop
-    if (!msg.content) return;
-    if (msg.author.id == 1165640449466306670 ) {
-
-        
-        var currentdate = new Date();
-        var datetime = currentdate.getDate() + "/"
-                        + (currentdate.getMonth()+1)  + "/"
-                        + currentdate.getFullYear() + " @ "
-                        + currentdate.getHours() + ":"
-                        + currentdate.getMinutes() + ":"
-                        + currentdate.getSeconds();
-        console.log(datetime + " - " + msg.author.username + ": " + msg.content);
-        
-        //bot trigger word
-        let result_message = msg.content.includes(character);   
-        mensagem_user=removeKeyword(msg.content,character);
-        
-        if (result_message) {
-            //wait 2 seconds before replying
-            //setTimeout(function() {
-                chatgpt("Carlos: "  + mensagem_user + ".",msg);
-          //    }, 15000);
-             
-     
-         }
-
-        }
-        else {
-            
-            return;
-        }
-
-      
-    }
-    );
-
-//////////////////////
-client.on("speech", async (msg) => { 
-    // If bot didn't recognize speech, content will be empty
-
-    if (!msg.content) return;
-    var currentdate = new Date();
-    var datetime = currentdate.getDate() + "/"
-                    + (currentdate.getMonth()+1)  + "/"
-                    + currentdate.getFullYear() + " @ "
-                    + currentdate.getHours() + ":"
-                    + currentdate.getMinutes() + ":"
-                    + currentdate.getSeconds();
+client.on('messageCreate', (msg) => {
+  if (!msg.content) return;
+  if (msg.author.id == 1165640449466306670) {
+    const currentdate = new Date();
+    const datetime = currentdate.getDate() + "/" + (currentdate.getMonth() + 1) + "/" + currentdate.getFullYear() + " @ " + currentdate.getHours() + ":" + currentdate.getMinutes() + ":" + currentdate.getSeconds();
     console.log(datetime + " - " + msg.author.username + ": " + msg.content);
-    
-    //bot trigger word
-    let result_responde = msg.content.includes(character);
-    let antonio_responde = msg.content.toLowerCase().includes("chama o antónio");
-    let vanessa_responde = msg.content.toLowerCase().includes("chama a vanessa");
-    let joao_responde = msg.content.toLowerCase().includes("chama o joão");
-
-    //remove bot trigger word from message
-    if (antonio_responde) {
-        console.log("dwitch to antonio trigger")
-        voice=voice_male;
-        character="António";
-        current_personality=personality_antonio;
-
-        chatgpt("Criador: A partir de agora és o António, uma personagem de poucas palavras mas um amor de pessoa e muito carinhoso. Acabaram de chamar por ti, anuncia a tua entrada:",msg);
-        return true
+    let result_message = msg.content.includes(character);
+    mensagem_user = removeKeyword(msg.content, character);
+    if (result_message) {
+      chatgpt("Carlos: " + mensagem_user + ".", msg);
     }
-    if (vanessa_responde) {
-        console.log("switch to antonio trigger")
-        voice=voice_female;
-        character="Vanessa";
-        current_personality=personality_vanessa;
+  } else {
+    return;
+  }
+});
 
-        chatgpt("Criador: A partir de agora és novamente a Vanessa. Acabaram de chamar por ti, anuncia a tua entrada:",msg);
-        return true
-    }
-    if (joao_responde) {
-        console.log("switch to joao trigger")
-        voice=voice_joao;
-        character="João";
-        current_personality=personality_joao;
-
-
-
-        
-
-        chatgpt("Criador: A partir de agora és o João.\n",msg);
-        return true
-    }
-   mensagem_user=removeKeyword(msg.content,character);
-    if (result_responde) {
-        console.log("ChatGPT request:" + mensagem_user)
-       
-
-chatgpt(msg.author.username +": "  + mensagem_user + ".",msg);
-
-    }
+client.on('speech', async (msg) => {
+  if (!msg.content) return;
+  const currentdate = new Date();
+  const datetime = currentdate.getDate() + "/" + (currentdate.getMonth() + 1) + "/" + currentdate.getFullYear() + " @ " + currentdate.getHours() + ":" + currentdate.getMinutes() + ":" + currentdate.getSeconds();
+  console.log(datetime + " - " + msg.author.username + ": " + msg.content);
+  let result_responde = msg.content.includes(character);
+  let antonio_responde = msg.content.toLowerCase().includes("chama o antónio");
+  let vanessa_responde = msg.content.toLowerCase().includes("chama a vanessa");
+  let joao_responde = msg.content.toLowerCase().includes("chama o joão");
+  if (antonio_responde) {
+    console.log("dwitch to antonio trigger");
+    voice = voice_male;
+    character = "António";
+    chatgpt("Criador: A partir de agora és o António, uma personagem de poucas palavras mas um amor de pessoa e muito carinhoso. Acabaram de chamar por ti, anuncia a tua entrada:", msg);
+    return true;
+  }
+  if (vanessa_responde) {
+    console.log("switch to antonio trigger");
+    voice = voice_female;
+    character = "Vanessa";
+    chatgpt("Criador: A partir de agora és novamente a Vanessa. Acabaram de chamar por ti, anuncia a tua entrada:", msg);
+    return true;
+  }
+  if (joao_responde) {
+    console.log("switch to joao trigger");
+    voice = voice_joao;
+    character = "João";
+    chatgpt("Criador: A partir de agora és o João.\n", msg);
+    return true;
+  }
+  mensagem_user = removeKeyword(msg.content, character);
+  if (result_responde) {
+    console.log("ChatGPT request:" + mensagem_user);
+    chatgpt(msg.author.username + ": " + mensagem_user + ".", msg);
+  }
 });
 
 function getDateTime() {
-
-    var date = new Date();
-    var hour = date.getHours();
-    hour = (hour < 10 ? "0" : "") + hour;
-    var min  = date.getMinutes();
-    min = (min < 10 ? "0" : "") + min;
-    var sec  = date.getSeconds();
-    sec = (sec < 10 ? "0" : "") + sec;
-    var year = date.getFullYear();
-    var month = date.getMonth() + 1;
-    month = (month < 10 ? "0" : "") + month;
-    var day  = date.getDate();
-    day = (day < 10 ? "0" : "") + day;
-    return day + "/" + month + "/" + year + " " + hour + ":" + min + ":" + sec;
-
+  const date = new Date();
+  const hour = date.getHours();
+  const min = date.getMinutes();
+  const sec = date.getSeconds();
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  return day + "/" + month + "/" + year + " " + hour + ":" + min + ":" + sec;
 }
 
-client.on('ready', async() => {
-//add date to start up message
-datetime=getDateTime();
+client.on('ready', async () => {
+  datetime = getDateTime();
+  console.log(datetime + '-- Starting up...');
+  console.log('Package version: ' + VERSION);
+  console.log('Logged in as ' + client.user.username + ' - (' + client.user.id + ')');
+  console.log("joining channel...");
+  chatgpt_start();
+  console.log("Ready to go!");
+  triggerRandomly();
+  console.log("--------------------------------------------------");
+});
 
-
-
-console.log(datetime + '-- Starting up...');
-console.log('Package version: ' + VERSION);
-    //get client username
-    console.log('Logged in as ' + client.user.username + ' - (' + client.user.id + ')');
-    console.log("joining channel...");
+client.on('messageCreate', message => {
+  if (message.content.toLowerCase().includes("!stop")) {
+    console.log("Disconnecting from voice channel...");
+    connection.destroy();
+    console.log("Disconnected from voice channel.");
+  }
+  if (message.content.toLowerCase().includes("!start")) {
+    console.log("Connecting to voice channel...");
     chatgpt_start();
-    console.log("Ready to go!");
-    triggerRandomly();
-    console.log("--------------------------------------------------")
+    console.log("Connected to voice channel.");
+  }
+  if (message.content.toLowerCase().includes("!switchmale")) {
+    console.log("switching from " + voice + " to" + voice_male);
+    voice = voice_male;
+  }
+  if (message.content.toLowerCase().includes("!switchfemale")) {
+    console.log("switching from " + voice + " to" + voice_female);
+    voice = voice_female;
+  }
+  if (message.content.toLowerCase().includes("!version")) {
+    message.channel.send(VERSION);
+  }
+});
 
-    voice=voice_female;
-
-
-
-//get number of members in the voice channel
-
-    
-}
-);
-//check if someone jointed channel
-client.on('messageCreate', message => { // when there is a message sent
-
-    //disconnect from voice channel
-    if (message.content.toLowerCase().includes("!stop")) {
-        console.log("Disconnecting from voice channel...");
-        connection.destroy();
-        console.log("Disconnected from voice channel.");
-    }
-
-    //connect to 
-    if (message.content.toLowerCase().includes("!start")) { 
-        console.log("Connecting to voice channel...");
-        chatgpt_start();
-        console.log("Connected to voice channel.");
-    }
-    if (message.content.toLowerCase().includes("!switchmale")) { 
-        console.log("switching from " + voice + " to" + voice_male)
-        voice=voice_male
-        
-    }
-    if (message.content.toLowerCase().includes("!switchfemale")) { 
-        console.log("switching from " + voice + " to" + voice_female)
-        voice=voice_female
-    }
-    if (message.content.toLowerCase().includes("!version")) { 
-        message.channel.send(VERSION)
-    }
-
-   /* if (message.content === "!status") {
-        // msg is equal to the message content without !status keywork
-        msg=removeKeyword(message.content,"!status");
-        console.log("----->" + msg);
-        chatgpt(msg,message.channel);
-        //message.channel.send("I'm alive!")   
-    }
-    if (msg) {
-        msg=removeKeyword(message.content,"!status");
-        console.log("----->" + msg);
-        chatgpt(msg,message.channel);
-    }*/
-})
 client.login(process.env.BOT_TOKEN);
-
-
-
-
