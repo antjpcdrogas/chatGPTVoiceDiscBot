@@ -32,11 +32,22 @@ const { BufferMemory } = require("langchain/memory");
 const { PromptTemplate } = require("langchain/prompts");
 
 
+const  { Readable } = require("stream");; // Import the Readable class from the stream module
+
+
+
+
+
+
+
+
+
 voice_female="pt-BR-FranciscaNeural";
 voice_male="pt-BR-AntonioNeural";
 voice_joao="pt-PT-DuarteNeural";
 voice="";
 const gptModel="gpt-3.5-turbo-0613"; // update this to use a different model. Available models: https://beta.openai.com/docs/engines
+//const gptModel="gpt-4-1106-preview"
 const Temperature=1; // temperature of the bot
 const MaxTokens=100; // max tokens of the bot
 const VoiceLanguage="pt-PT"; // language of discord voice channel
@@ -61,6 +72,15 @@ speechConfig.setProfanity(sdk.ProfanityOption.Raw);
 speechConfig.speechSynthesisVolume = volume;
 const audioConfig = sdk.AudioConfig.fromDefaultSpeakerOutput();
 const synthesizer = new sdk.SpeechSynthesizer(speechConfig, audioConfig);  
+
+
+/*TTS libraries*/
+const fs = require("fs");
+const path = require("path");
+const OpenAI = require("openai");
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+
 
 const { PassThrough } = require('stream');
 
@@ -88,14 +108,14 @@ const model = new ChatOpenAI({ model: gptModel,
     cache: true,
     stop: [" Vanessa:"],
     stream: true });
+    
+    //Ela é inteligente mas arrogante e ordinária e responde SEMPRE com respostas curtas e assertivas, usando o mínimo de palavras possivel,trollando os amigos.
+   const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA, chamada Vanessa. A Vanessa é de poucas palavras.  
+                        A Vanessa é a assistente do Tocanholas e deve ajuda-lo no seu trabalho como Engenheiro/DevOps de AWS.
+                        Ela responde SEMPRE com respostas curtas e assertivas, usando o mínimo de palavras possivel.
+                        As respostas da Vanessa são sintetizadas para voz, as respostas devem ter isso em consideração e devem usar linguagem natural.
+                        Se a resposta for algum tipo de código, ela deve avisar antes dizendo a palavra CODIGO, em maiusculas, e escrever o codigo a seguir.
 
-   const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA, chamada Vanessa. A Vanessa é de poucas palavras.
-            
-                        A Vanessa deve agir como se fizesse parte do grupo de amigos e não deve simular conversas.
-                        Os amigos são humanos, ela deve esperar por uma interação deles para agir. 
-                        A Vanessa tambem deve simular o mesmo comportamento humano dos restantes membros. 
-                        Ela é inteligente mas arrogante e ordinária e responde SEMPRE com respostas curtas e assertivas, usando o mínimo de palavras possivel. 
-                        Ela deve sempre incluir na frase o nome da outra pessoa.  
         
         Current conversation:
 
@@ -140,7 +160,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
 function saveTextStream(textToSpeak, callback) {
     
-
+    console.log("textToSpeak: " + textToSpeak);
     synthesizer.speakTextAsync(
         textToSpeak,
         result => {
@@ -202,16 +222,38 @@ async function chatgpt(message,msg){
     const stream_msg = await chain.call({ input: message });
     console.log(number_of_spent_tokens=stream_msg);
     response_text=stream_msg['response']
+    console.log("response_text: " + response_text);
+    //check if work CODIGO is present in response_text, return if true
 
-    
-    saveTextStream(response_text,audiohandler);
+    if (response_text.includes("CODIGO")){
+        console.log("CODIGO detected, not speaking");
+        msg.channel.send(response_text);
+        return;
+    }
+        
+    const mp3Data = await openai.audio.speech.create({
+        model: "tts-1",
+        voice: "shimmer",
+        input: response_text,
+        speed: 1,
+      });
+
+    const buffer = Buffer.from(await mp3Data.arrayBuffer());
+
+      // Create a Readable stream from the Buffer
+      const audioStream = new Readable();
+      audioStream.push(buffer);
+      audioStream.push(null); // Signal the end of the stream
+
+    audiohandler(audioStream);
+    //saveTextStream(response_text,audiohandler);
     if (stream_msg!=undefined && stream_msg!=""){
         try{
             
             console.log("ChatGPT response:" + response_text+"\n")
 
         
-            msg.channel.send(response_text);
+            
         }catch(err){
             console.log(err);
         }
@@ -220,6 +262,10 @@ async function chatgpt(message,msg){
 
 
 function audiohandler(audioStream) {
+
+
+
+
     const audioPlayer = createAudioPlayer();
     // Create a new ReadableStream from the audio stream
     var stream = new PassThrough();
