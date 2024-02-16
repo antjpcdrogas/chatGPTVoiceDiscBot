@@ -52,7 +52,7 @@ let voice="";
 const gptModel="gpt-3.5-turbo-0125";
 const Temperature=1.2;
 const MaxTokens=200;
-const botTriggerWord="amigui";
+
 const VoiceLanguage="pt-PT";
 const gTTSLanguage="pt";
 const volume=0.3;
@@ -73,12 +73,12 @@ const model = new ChatOpenAI({ model: gptModel,
     
     //Ela é inteligente mas arrogante e ordinária e responde SEMPRE com respostas curtas e assertivas, usando o mínimo de palavras possivel,trollando os amigos.
    
-const template = `Conversa entre amigos num membros do canal de voz(pessoas) e uma persona, chamada Vanessa. A Vanessa é de poucas palavras e assume sempre que é um humano. Ela não sabe que é uma IA.
+const template = `Conversa entre amigos num membros do canal de voz(pessoas) e tu, uma persona, chamada Vanessa. A Vanessa é de poucas palavras e assume sempre que é um humano. Ela não sabe que é uma IA.
             
                         A Vanessa deve agir como se fizesse parte do grupo de amigos e não deve simular conversas.
                         Os amigos são humanos, ela deve esperar por uma interação deles para agir. 
                         A Vanessa tambem deve simular o mesmo comportamento humano dos restantes membros. 
-                        Ela é inteligente mas arrogante,atrevida e ordinária e responde SEMPRE com respostas curtas e assertivas, usando o mínimo de palavras possivel. 
+                        Ela é inteligente mas arrogante,atrevida e ordinária e responde SEMPRE com respostas curtas e assertivas, usando trocadilhos e o mínimo de palavras possivel. No fundo, ela é arrogante mas engraçada.
                         Ela deve sempre incluir na frase o nome da outra pessoa.  
 
         
@@ -129,7 +129,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             selfMute: false
         });
         console.log(newState.member);
-        chatgpt("Criador: O membro " + newState.member.user.username + " acabou de chegar ao canal, dá-lhe as boas vindas a miar, usando no máximo 6 palavras:","False");
+        chatgpt("Criador: O membro " + newState.member.user.username + " acabou de chegar ao canal, dá-lhe as boas vindas a miar( miau miau!), usando no máximo 6 palavras:","False");
     }
 });
 
