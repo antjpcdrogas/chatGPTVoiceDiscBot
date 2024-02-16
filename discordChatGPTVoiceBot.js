@@ -46,13 +46,12 @@ const guildId=process.env.guildId
 const speech_key=process.env.SPEECH_KEY
 
 const voice_female="pt-BR-FranciscaNeural";
-const voice_male="pt-BR-AntonioNeural";
-const voice_joao="pt-PT-DuarteNeural";
+
 let voice="";
 
 const gptModel="gpt-3.5-turbo";
-const Temperature=1;
-const MaxTokens=100;
+const Temperature=1.2;
+const MaxTokens=200;
 const botTriggerWord="amigui";
 const VoiceLanguage="pt-PT";
 const gTTSLanguage="pt";
@@ -74,7 +73,7 @@ const model = new ChatOpenAI({ model: gptModel,
     
     //Ela é inteligente mas arrogante e ordinária e responde SEMPRE com respostas curtas e assertivas, usando o mínimo de palavras possivel,trollando os amigos.
    
-const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA, chamada Vanessa. A Vanessa é de poucas palavras.
+const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA, chamada Vanessa. A Vanessa é de poucas palavras e não sabe que é uma IA.
             
                         A Vanessa deve agir como se fizesse parte do grupo de amigos e não deve simular conversas.
                         Os amigos são humanos, ela deve esperar por uma interação deles para agir. 
@@ -224,11 +223,12 @@ client.on("speech", async (msg) => {
                     + currentdate.getSeconds();
     console.log(datetime + " - " + msg.author.username + ": " + msg.content);
 
+    let result_responde = msg.content.includes(character);
     mensagem_user=removeKeyword(msg.content,character);
-
+    if (result_responde){
         console.log("ChatGPT request:" + mensagem_user)
         chatgpt(msg.author.username +": "  + mensagem_user + ".",msg);
-    
+    }
 });
 
 client.on('ready', async() => {
