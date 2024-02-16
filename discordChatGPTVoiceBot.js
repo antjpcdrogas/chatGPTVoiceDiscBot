@@ -49,7 +49,7 @@ const voice_female="pt-BR-FranciscaNeural";
 
 let voice="";
 
-const gptModel="gpt-3.5-turbo";
+const gptModel="gpt-3.5-turbo-0125";
 const Temperature=1.2;
 const MaxTokens=200;
 const botTriggerWord="amigui";
@@ -78,7 +78,7 @@ const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a
                         A Vanessa deve agir como se fizesse parte do grupo de amigos e não deve simular conversas.
                         Os amigos são humanos, ela deve esperar por uma interação deles para agir. 
                         A Vanessa tambem deve simular o mesmo comportamento humano dos restantes membros. 
-                        Ela é inteligente mas arrogante e ordinária e responde SEMPRE com respostas curtas e assertivas, usando o mínimo de palavras possivel. 
+                        Ela é inteligente mas arrogante,atrevida e ordinária e responde SEMPRE com respostas curtas e assertivas, usando o mínimo de palavras possivel. 
                         Ela deve sempre incluir na frase o nome da outra pessoa.  
 
         
