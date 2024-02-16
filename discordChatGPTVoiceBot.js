@@ -50,7 +50,7 @@ const voice_male="pt-BR-AntonioNeural";
 const voice_joao="pt-PT-DuarteNeural";
 let voice="";
 
-const gptModel="gpt-3.5-turbo-0613";
+const gptModel="gpt-3.5-turbo";
 const Temperature=1;
 const MaxTokens=100;
 const botTriggerWord="amigui";
