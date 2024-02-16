@@ -212,26 +212,6 @@ function audiohandler(audioStream) {
     connection.subscribe(audioPlayer);
 }
 
-client.on('messageCreate', (msg) => {
-    if (!msg.content) return;
-    if (msg.author.id == 1165640449466306670 ) {
-        var currentdate = new Date();
-        var datetime = currentdate.getDate() + "/"
-                        + (currentdate.getMonth()+1)  + "/"
-                        + currentdate.getFullYear() + " @ "
-                        + currentdate.getHours() + ":"
-                        + currentdate.getMinutes() + ":"
-                        + currentdate.getSeconds();
-        console.log(datetime + " - " + msg.author.username + ": " + msg.content);
-        let result_message = msg.content.includes(character);   
-        mensagem_user=removeKeyword(msg.content,character);
-        if (result_message) {
-            chatgpt("Carlos: "  + mensagem_user + ".",msg);
-        }
-    } else {
-        return;
-    }
-});
 
 client.on("speech", async (msg) => { 
     if (!msg.content) return;
@@ -243,12 +223,12 @@ client.on("speech", async (msg) => {
                     + currentdate.getMinutes() + ":"
                     + currentdate.getSeconds();
     console.log(datetime + " - " + msg.author.username + ": " + msg.content);
-    let result_responde = msg.content.includes(character);
+
     mensagem_user=removeKeyword(msg.content,character);
-    if (result_responde) {
+
         console.log("ChatGPT request:" + mensagem_user)
         chatgpt(msg.author.username +": "  + mensagem_user + ".",msg);
-    }
+    
 });
 
 client.on('ready', async() => {
