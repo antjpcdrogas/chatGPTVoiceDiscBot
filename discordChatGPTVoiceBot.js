@@ -73,7 +73,7 @@ const model = new ChatOpenAI({ model: gptModel,
     
     //Ela é inteligente mas arrogante e ordinária e responde SEMPRE com respostas curtas e assertivas, usando o mínimo de palavras possivel,trollando os amigos.
    
-const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA, chamada Vanessa. A Vanessa é de poucas palavras e não sabe que é uma IA.
+const template = `Conversa entre amigos num membros do canal de voz(pessoas) e um humano, chamada Vanessa. A Vanessa é de poucas palavras e assume sempre que é um humano.
             
                         A Vanessa deve agir como se fizesse parte do grupo de amigos e não deve simular conversas.
                         Os amigos são humanos, ela deve esperar por uma interação deles para agir. 
@@ -99,7 +99,6 @@ speechConfig.setProfanity(sdk.ProfanityOption.Raw);
 speechConfig.speechSynthesisVolume = volume;
 const audioConfig = sdk.AudioConfig.fromDefaultSpeakerOutput();
 const synthesizer = new sdk.SpeechSynthesizer(speechConfig, audioConfig);  
-     
 const player = createAudioPlayer();
 const client = new Client({
     intents: [
@@ -113,10 +112,10 @@ const client = new Client({
 
 const { PassThrough } = require('stream');
 
+
 player.on(AudioPlayerStatus.Playing, () => {
     console.log('The audio player has started playing!');
 });
-
 client.on('voiceStateUpdate', async (oldState, newState) => {
     if (newState.member.user.id === botDiscId) return;
     if (newState.channelId === channelId && (oldState.channelId === null || oldState.channelId !== newState.channelId)) {
@@ -134,10 +133,11 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
     }
 });
 
+
 addSpeechEvent(client, { lang: VoiceLanguage, profanityFilter: false });
 
-function saveTextStream(textToSpeak, callback) {
 
+function saveTextStream(textToSpeak, callback) {
     synthesizer.speakTextAsync(
         textToSpeak,
         result => {
@@ -153,6 +153,7 @@ function saveTextStream(textToSpeak, callback) {
         }
     );
 }
+
 
 async function chatgpt_start(){
     console.log("Starting bot...")
@@ -170,6 +171,7 @@ async function chatgpt_start(){
     chatgpt("Criador: A Vanessa acabou de aterrar num canal de voz e deve saudar os membros:","False");
 }
 
+
 function removeKeyword(message,keyword){
     var index = message.indexOf(keyword);
     if (index > -1) {
@@ -177,6 +179,8 @@ function removeKeyword(message,keyword){
     }
     return message;
 }
+
+
 
 async function chatgpt(message,msg){
     console.log(message)
@@ -199,10 +203,6 @@ async function chatgpt(message,msg){
 }
 
 function audiohandler(audioStream) {
-
-
-
-
     const audioPlayer = createAudioPlayer();
     var stream = new PassThrough();
     audioStream.pipe(stream);
