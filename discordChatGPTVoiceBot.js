@@ -37,6 +37,7 @@ const { ChatOpenAI  } = require("langchain/chat_models/openai");
 const { BufferMemory } = require("langchain/memory");
 const { PromptTemplate } = require("langchain/prompts");
 
+
 const VERSION = process.env.npm_package_config_version;
 const botDiscId=process.env.botDiscId
 const channelId=process.env.channelId
@@ -56,8 +57,10 @@ const VoiceLanguage="pt-PT";
 const gTTSLanguage="pt";
 const volume=0.3;
 
+
 const parser = new StringOutputParser();
 const memory = new BufferMemory({ memoryKey: "chat_history",ai_prefix: "Vanessa:"});
+
 
 const model = new ChatOpenAI({ model: gptModel,
     max_tokens: MaxTokens,
@@ -67,6 +70,14 @@ const model = new ChatOpenAI({ model: gptModel,
     cache: true,
     stop: [" Vanessa:"],
     stream: true });
+    
+    //Ela é inteligente mas arrogante e ordinária e responde SEMPRE com respostas curtas e assertivas, usando o mínimo de palavras possivel,trollando os amigos.
+   const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA, chamada Vanessa. A Vanessa é de poucas palavras.  
+                        A Vanessa é a assistente do Tocanholas e deve ajuda-lo no seu trabalho como Engenheiro/DevOps de AWS.
+                        Ela responde SEMPRE com respostas curtas e assertivas, usando o mínimo de palavras possivel.
+                        As respostas da Vanessa são sintetizadas para voz, as respostas devem ter isso em consideração e devem usar linguagem natural.
+                        Se a resposta for algum tipo de código, ela deve avisar antes dizendo a palavra CODIGO, em maiusculas, e escrever o codigo a seguir.
+
 
 const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA, chamada Vanessa. A Vanessa é de poucas palavras.
             
@@ -75,6 +86,7 @@ const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a
                         A Vanessa tambem deve simular o mesmo comportamento humano dos restantes membros. 
                         Ela é inteligente mas arrogante e ordinária e responde SEMPRE com respostas curtas e assertivas, usando o mínimo de palavras possivel. 
                         Ela deve sempre incluir na frase o nome da outra pessoa.  
+
         
         Current conversation:
 
@@ -131,6 +143,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 addSpeechEvent(client, { lang: VoiceLanguage, profanityFilter: false });
 
 function saveTextStream(textToSpeak, callback) {
+
     synthesizer.speakTextAsync(
         textToSpeak,
         result => {
@@ -176,11 +189,15 @@ async function chatgpt(message,msg){
     const stream_msg = await chain.call({ input: message });
     console.log(number_of_spent_tokens=stream_msg);
     response_text=stream_msg['response']
+
     saveTextStream(response_text,audiohandler);
+
     if (stream_msg!=undefined && stream_msg!=""){
         try{
             console.log("ChatGPT response:" + response_text+"\n")
+
             msg.channel.send(response_text);
+
         }catch(err){
             console.log(err);
         }
@@ -188,6 +205,10 @@ async function chatgpt(message,msg){
 }
 
 function audiohandler(audioStream) {
+
+
+
+
     const audioPlayer = createAudioPlayer();
     var stream = new PassThrough();
     audioStream.pipe(stream);
