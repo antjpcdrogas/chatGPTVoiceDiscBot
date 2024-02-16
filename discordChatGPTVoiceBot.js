@@ -73,13 +73,7 @@ const model = new ChatOpenAI({ model: gptModel,
     stream: true });
     
     //Ela é inteligente mas arrogante e ordinária e responde SEMPRE com respostas curtas e assertivas, usando o mínimo de palavras possivel,trollando os amigos.
-   const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA, chamada Vanessa. A Vanessa é de poucas palavras.  
-                        A Vanessa é a assistente do Tocanholas e deve ajuda-lo no seu trabalho como Engenheiro/DevOps de AWS.
-                        Ela responde SEMPRE com respostas curtas e assertivas, usando o mínimo de palavras possivel.
-                        As respostas da Vanessa são sintetizadas para voz, as respostas devem ter isso em consideração e devem usar linguagem natural.
-                        Se a resposta for algum tipo de código, ela deve avisar antes dizendo a palavra CODIGO, em maiusculas, e escrever o codigo a seguir.
-
-
+   
 const template = `Conversa entre amigos num membros do canal de voz(pessoas) e a IA, chamada Vanessa. A Vanessa é de poucas palavras.
             
                         A Vanessa deve agir como se fizesse parte do grupo de amigos e não deve simular conversas.
@@ -268,7 +262,7 @@ client.on('ready', async() => {
     triggerRandomly();
     console.log("--------------------------------------------------")
     voice=voice_female;
-}
+});
 
 client.on('messageCreate', message => {
     if (message.content.toLowerCase().includes("!stop")) {
@@ -284,6 +278,6 @@ client.on('messageCreate', message => {
     if (message.content.toLowerCase().includes("!version")) { 
         message.channel.send(VERSION)
     }
-})
+});
 
 client.login(process.env.BOT_TOKEN);
