@@ -58,7 +58,7 @@ const VoiceLanguage="pt-PT";
 const gTTSLanguage="pt";
 const volume=0.3;
 
-
+character="Vanessa";
 const parser = new StringOutputParser();
 const memory = new BufferMemory({ memoryKey: "chat_history",ai_prefix: "Vanessa:"});
 
