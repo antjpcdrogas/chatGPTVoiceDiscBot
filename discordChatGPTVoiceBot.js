@@ -16,6 +16,7 @@
 // 5. Join the channel to hear a personalized greeting from the bot
 // 6. Say the trigger word "reply" to get a response from the bot
 ////////////////////////////////////////////////////////////////////////////////////////
+//
 const { triggerRandomly } = require('./functions');
 const { getDateTime } = require('./functions');
 const { Client, GatewayIntentBits} = require('discord.js')
