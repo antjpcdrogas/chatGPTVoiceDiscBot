@@ -50,8 +50,8 @@ const voice_female="pt-BR-FranciscaNeural";
 let voice="";
 
 const gptModel="gpt-3.5-turbo-0125";
-const Temperature=1.2;
-const MaxTokens=200;
+const Temperature=0.5;
+const MaxTokens=100;
 
 const VoiceLanguage="pt-PT";
 const gTTSLanguage="pt";
