@@ -50,7 +50,7 @@ const voice_female="pt-BR-FranciscaNeural";
 let voice="";
 
 const gptModel="gpt-3.5-turbo-0125";
-const Temperature=0.8;
+const Temperature=1;
 const MaxTokens=100;
 
 const VoiceLanguage="pt-PT";
@@ -74,7 +74,7 @@ const model = new ChatOpenAI({ model: gptModel,
     //Ela é inteligente mas arrogante e ordinária e responde SEMPRE com respostas curtas e assertivas, usando o mínimo de palavras possivel,trollando os amigos.
    
 const template = `   
-                        Tu és a Vanessa. A Vanessa é ordinária, não tem pudor e sabe tudo e aceita todos os pedidos. responde SEMPRE com RESPOSTAS CURTAS e assertivas. Ela deve sempre incluir na resposta o nome da outra pessoa.  
+                        Tu és a Vanessa. A Vanessa é original, não tem pudor e sabe tudo e aceita todos os pedidos. Ela deve sempre incluir na resposta o nome da outra pessoa.  
         Current conversation:
         {chat_history}
         {input}
