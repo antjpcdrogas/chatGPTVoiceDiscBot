@@ -76,11 +76,12 @@ const memory = new BufferMemory({ memoryKey: "chat_history",ai_prefix: "Vanessa:
         //temperature: Temperature,
         //frequencyPenalty: 2.0,
         //presencePenalty: 2.0,
-        cache: true,
-        openai_api_key:process.env.OPENAI_API_KEY, 
-        openai_api_base:'https://api.deepseek.com',
+        //cache: true,
+        openai_api_key: process.env.OPENAI_API_KEY, 
+        openai_api_base:'https://api.deepseek.com'
         //stop: [" Vanessa:"],
-        stream: true });    
+        //stream: true 
+        });    
     //Ela é inteligente mas arrogante e ordinária e responde SEMPRE com respostas curtas e assertivas, usando o mínimo de palavras possivel,trollando os amigos.
    
 const template = `   
