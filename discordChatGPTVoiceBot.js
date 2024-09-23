@@ -62,7 +62,7 @@ const parser = new StringOutputParser();
 const memory = new BufferMemory({ memoryKey: "chat_history",ai_prefix: "Vanessa:"});
 
 
-const model = new ChatOpenAI({ model: gptModel,
+/*const model = new ChatOpenAI({ model: gptModel,
     max_tokens: MaxTokens,
     temperature: Temperature,
     frequencyPenalty: 2.0,
@@ -70,7 +70,17 @@ const model = new ChatOpenAI({ model: gptModel,
     cache: true,
     stop: [" Vanessa:"],
     stream: true });
-    
+    */
+    const model = new ChatOpenAI({ model: "deepseek-chat",
+        max_tokens: MaxTokens,
+        //temperature: Temperature,
+        //frequencyPenalty: 2.0,
+        //presencePenalty: 2.0,
+        cache: true,
+        openai_api_key:process.env.OPENAI_API_KEY, 
+        openai_api_base:'https://api.deepseek.com',
+        //stop: [" Vanessa:"],
+        stream: true });    
     //Ela é inteligente mas arrogante e ordinária e responde SEMPRE com respostas curtas e assertivas, usando o mínimo de palavras possivel,trollando os amigos.
    
 const template = `   
