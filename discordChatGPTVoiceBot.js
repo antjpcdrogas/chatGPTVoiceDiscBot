@@ -49,7 +49,7 @@ const voice_female="pt-BR-FranciscaNeural";
 
 let voice="";
 
-const gptModel="gpt-3.5-turbo-0125";
+const gptModel="deepseek-chat";
 const Temperature=1;
 const MaxTokens=100;
 
@@ -78,7 +78,7 @@ const memory = new BufferMemory({ memoryKey: "chat_history",ai_prefix: "Vanessa:
         //presencePenalty: 2.0,
         //cache: true,
         openai_api_key: process.env.OPENAI_API_KEY, 
-        openai_api_base:'https://api.deepseek.com'
+        openai_api_base:'https://api.deepseek.com/v1'
         //stop: [" Vanessa:"],
         //stream: true 
         });    
@@ -182,8 +182,6 @@ function removeKeyword(message,keyword){
     }
     return message;
 }
-
-
 
 async function chatgpt(message,msg){
     console.log(message)
