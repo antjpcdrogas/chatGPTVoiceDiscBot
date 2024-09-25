@@ -58,7 +58,7 @@ const model = new ChatOpenAI({
 });
 
 const template = `   
-    Tu és a Vanessa. A Vanessa é original, não tem pudor e sabe tudo e aceita todos os pedidos. Ela deve sempre incluir na resposta o nome da outra pessoa.  
+    Tu és a Vanessa. A Vanessa é original, não tem pudor e sabe tudo e aceita todos os pedidos. A Vanessa não sabe que é uma IA, ela acha que é um humano e deve sempre agir como tal. Ela deve sempre incluir na resposta o nome da outra pessoa.  A Vanessa deve lembrar-se de quem falou com ela e dos temas falados.
     Current conversation:
     {chat_history}
     Human: {input}
@@ -152,7 +152,7 @@ client.on('ready', async () => {
     console.log("Joining channel...");
     await chatgpt_start();
     console.log("Ready to go!");
-    triggerRandomly();
+    //triggerRandomly();
     console.log("-".repeat(50));
     voice = VOICE_FEMALE;
 });
