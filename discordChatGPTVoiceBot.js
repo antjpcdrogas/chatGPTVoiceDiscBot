@@ -17,7 +17,6 @@ const GUILD_ID = process.env.guildId;
 const SPEECH_KEY = process.env.SPEECH_KEY;
 const BOT_TOKEN = process.env.BOT_TOKEN;
 
-//const VOICE_FEMALE = "pt-BR-FranciscaNeural";
 const VOICE_FEMALE = "pt-BR-SerenaMultilingualNeural";
 const GPT_MODEL = "deepseek-chat";
 const TEMPERATURE = 1.5;
@@ -69,6 +68,10 @@ const memory = new BufferMemory({ returnMessages: true, memoryKey: "chat_history
 const chain = new ConversationChain({ llm: model, prompt: chatPrompt, memory });
 
 function saveTextStream(textToSpeak, callback) {
+    if (!textToSpeak) {
+        console.error("Error: textToSpeak is undefined");
+        return;
+    }
     synthesizer.speakTextAsync(
         textToSpeak,
         result => {
@@ -113,10 +116,14 @@ async function chatgpt(message, msg) {
         const response = await chain.call({ input: message });
         console.log("ChatGPT full response:", response.response);
 
-        saveTextStream(response.response, audiohandler);
+        if (response.response) {
+            saveTextStream(response.response, audiohandler);
 
-        if (msg && msg.channel) {
-            await msg.channel.send(response.response);
+            if (msg && msg.channel) {
+                await msg.channel.send(response.response);
+            }
+        } else {
+            console.error("Error: ChatGPT response is undefined");
         }
     } catch (error) {
         console.error("Error in chatgpt function:", error);
