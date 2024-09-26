@@ -19,8 +19,8 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 
 const VOICE_FEMALE = "pt-BR-FranciscaNeural";
 const GPT_MODEL = "deepseek-chat";
-const TEMPERATURE = 1;
-const MAX_TOKENS = 100;
+const TEMPERATURE = 1.5;
+const MAX_TOKENS = 200;
 const VOICE_LANGUAGE = "pt-PT";
 const VOLUME = 0.3;
 const CHARACTER = "Vanessa";
