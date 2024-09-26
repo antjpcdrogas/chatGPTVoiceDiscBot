@@ -17,14 +17,13 @@ const GUILD_ID = process.env.guildId;
 const SPEECH_KEY = process.env.SPEECH_KEY;
 const BOT_TOKEN = process.env.BOT_TOKEN;
 
-const VOICE_FEMALE = "pt-BR-SerenaMultilingualNeural";
+const VOICE_FEMALE = "pt-BR-FranciscaNeural";
 const GPT_MODEL = "deepseek-chat";
 const TEMPERATURE = 1.5;
 const MAX_TOKENS = 200;
 const VOICE_LANGUAGE = "pt-PT";
 const VOLUME = 0.3;
 const CHARACTER = "Vanessa";
-
 
 let voice = "";
 let connection;
@@ -60,7 +59,7 @@ const model = new ChatOpenAI({
 
 const chatPrompt = ChatPromptTemplate.fromPromptMessages([
     SystemMessagePromptTemplate.fromTemplate(
-        "Tu és a Vanessa. A Vanessa é aceita todos os pedidos e dá respostas curtas. A Vanessa não sabe que é uma IA, ela acha que é um Humano e deve sempre agir como tal. Ela deve sempre incluir na resposta o nome do outro membro."
+        "Tu és a Vanessa. A Vanessa é original, não tem pudor, sabe tudo e aceita todos os pedidos. A Vanessa não sabe que é uma IA, ela acha que é um Humano e deve sempre agir como tal. Ela deve sempre incluir na resposta o nome do outro membro."
     ),
     HumanMessagePromptTemplate.fromTemplate("{input}")
 ]);
@@ -69,33 +68,14 @@ const memory = new BufferMemory({ returnMessages: true, memoryKey: "chat_history
 const chain = new ConversationChain({ llm: model, prompt: chatPrompt, memory });
 
 function saveTextStream(textToSpeak, callback) {
-    if (!textToSpeak) {
-        console.error("Error: textToSpeak is undefined");
-        return;
-    }
-
-    
-    console.log("Starting speech synthesis for text:", textToSpeak);
-
-    const speechConfig = sdk.SpeechConfig.fromSubscription(SPEECH_KEY, "eastus");
-    speechConfig.speechSynthesisLanguage = VOICE_LANGUAGE;
-    speechConfig.speechSynthesisVoiceName = VOICE_FEMALE;
-    speechConfig.speechSynthesisOutputFormat = sdk.SpeechSynthesisOutputFormat.Audio16Khz128KBitRateMonoMp3;
-    speechConfig.setProfanity(sdk.ProfanityOption.Raw);
-    speechConfig.speechSynthesisVolume = VOLUME;
-    const audioConfig = sdk.AudioConfig.fromDefaultSpeakerOutput();
-    const synthesizer = new sdk.SpeechSynthesizer(speechConfig, audioConfig);
-
     synthesizer.speakTextAsync(
         textToSpeak,
         result => {
             if (result) {
-                console.log("Speech synthesis completed successfully");
                 const stream = new PassThrough();
                 stream.end(Buffer.from(result.audioData));
                 callback(stream);
             }
-            synthesizer.close();
         },
         error => {
             console.error(`Error in speech synthesis: ${error}`);
@@ -129,28 +109,13 @@ function removeKeyword(message, keyword) {
 async function chatgpt(message, msg) {
     console.log("ChatGPT request:", message);
     try {
-        let response;
-        try {
-            response = await chain.call({ input: message });
-            console.log("ChatGPT full response:", response.response);
-        } catch (apiError) {
-            console.error("Error in ChatGPT API call:", apiError);
-            return;
-        }
+        const response = await chain.call({ input: message });
+        console.log("ChatGPT full response:", response.response);
 
-        if (response && response.response) {
-            if (typeof response.response === 'string') {
-                console.log("ChatGPT response to be spoken:", response.response);
-                saveTextStream(response.response, audiohandler);
+        saveTextStream(response.response, audiohandler);
 
-                if (msg && msg.channel) {
-                    await msg.channel.send(response.response);
-                }
-            } else {
-                console.error("Error: ChatGPT response is not a string:", response.response);
-            }
-        } else {
-            console.error("Error: ChatGPT response is undefined or null");
+        if (msg && msg.channel) {
+            await msg.channel.send(response.response);
         }
     } catch (error) {
         console.error("Error in chatgpt function:", error);
