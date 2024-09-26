@@ -124,10 +124,16 @@ function removeKeyword(message, keyword) {
 async function chatgpt(message, msg) {
     console.log("ChatGPT request:", message);
     try {
-        const response = await chain.call({ input: message });
-        console.log("ChatGPT full response:", response.response);
+        let response;
+        try {
+            response = await chain.call({ input: message });
+            console.log("ChatGPT full response:", response.response);
+        } catch (apiError) {
+            console.error("Error in ChatGPT API call:", apiError);
+            return;
+        }
 
-        if (response.response) {
+        if (response && response.response) {
             if (typeof response.response === 'string') {
                 saveTextStream(response.response, audiohandler);
 
@@ -138,7 +144,7 @@ async function chatgpt(message, msg) {
                 console.error("Error: ChatGPT response is not a string:", response.response);
             }
         } else {
-            console.error("Error: ChatGPT response is undefined");
+            console.error("Error: ChatGPT response is undefined or null");
         }
     } catch (error) {
         console.error("Error in chatgpt function:", error);
