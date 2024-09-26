@@ -4,10 +4,10 @@ const { addSpeechEvent } = require("discord-speech-recognition");
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
 const sdk = require("microsoft-cognitiveservices-speech-sdk");
 const { PassThrough } = require('stream');
-const { ConversationChain } = require("langchain/chains");
-const { BufferMemory } = require("langchain/memory");
 const { ChatOpenAI } = require("langchain/chat_models/openai");
+const { BufferMemory } = require("langchain/memory");
 const { PromptTemplate } = require("langchain/prompts");
+const { ConversationChain } = require("langchain/chains");
 require('dotenv').config();
 
 const VERSION = process.env.npm_package_config_version || '1.0.0';
@@ -54,7 +54,8 @@ const model = new ChatOpenAI({
     openAIApiKey: process.env.OPENAI_API_KEY, 
     configuration: {
         basePath: 'https://api.deepseek.com/v1'
-    }
+    },
+    streaming: true
 });
 
 const template = `   
@@ -110,14 +111,40 @@ function removeKeyword(message, keyword) {
 async function chatgpt(message, msg) {
     console.log("ChatGPT request:", message);
     try {
-        const response = await chain.call({ input: message });
-        const responseText = response.response;
+        let fullResponse = '';
+        let audioBuffer = '';
+        
+        const stream = await model.call([
+            { role: "system", content: prompt.template },
+            { role: "user", content: message }
+        ], { callbacks: [
+            {
+                handleLLMNewToken(token) {
+                    process.stdout.write(token);
+                    fullResponse += token;
+                    audioBuffer += token;
+                    
+                    // Send audio in chunks
+                    if (audioBuffer.length > 50 || token.includes('.') || token.includes('!') || token.includes('?')) {
+                        saveTextStream(audioBuffer, audiohandler);
+                        audioBuffer = '';
+                    }
+                }
+            }
+        ]});
 
-        console.log("ChatGPT response:", responseText);
-        saveTextStream(responseText, audiohandler);
+        // Send any remaining audio
+        if (audioBuffer.length > 0) {
+            saveTextStream(audioBuffer, audiohandler);
+        }
+
+        console.log("\nChatGPT full response:", fullResponse);
+
+        // Update memory
+        await memory.saveContext({ input: message }, { output: fullResponse });
 
         if (msg && msg.channel) {
-            await msg.channel.send(responseText);
+            await msg.channel.send(fullResponse);
         }
     } catch (error) {
         console.error("Error in chatgpt function:", error);
