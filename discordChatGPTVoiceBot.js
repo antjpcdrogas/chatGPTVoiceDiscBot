@@ -112,6 +112,7 @@ async function chatgpt(message, msg) {
     try {
         let fullResponse = '';
         let audioBuffer = '';
+        let sentenceBuffer = '';
         
         const response = await chain.call({ input: message }, { callbacks: [
             {
@@ -119,11 +120,21 @@ async function chatgpt(message, msg) {
                     process.stdout.write(token);
                     fullResponse += token;
                     audioBuffer += token;
+                    sentenceBuffer += token;
                     
-                    // Send audio in chunks
-                    if (audioBuffer.length > 50 || token.includes('.') || token.includes('!') || token.includes('?')) {
-                        saveTextStream(audioBuffer, audiohandler);
-                        audioBuffer = '';
+                    // Send audio in complete sentences or phrases
+                    if (token.includes('.') || token.includes('!') || token.includes('?') || token.includes(',')) {
+                        if (audioBuffer.length > 0) {
+                            saveTextStream(audioBuffer, audiohandler);
+                            audioBuffer = '';
+                        }
+                    } else if (audioBuffer.length > 100) {
+                        // If we have a long phrase without punctuation, send it anyway
+                        const lastSpaceIndex = audioBuffer.lastIndexOf(' ');
+                        if (lastSpaceIndex !== -1) {
+                            saveTextStream(audioBuffer.slice(0, lastSpaceIndex), audiohandler);
+                            audioBuffer = audioBuffer.slice(lastSpaceIndex + 1);
+                        }
                     }
                 }
             }
