@@ -72,6 +72,16 @@ function saveTextStream(textToSpeak, callback) {
         console.error("Error: textToSpeak is undefined");
         return;
     }
+
+    const speechConfig = sdk.SpeechConfig.fromSubscription(SPEECH_KEY, "eastus");
+    speechConfig.speechSynthesisLanguage = VOICE_LANGUAGE;
+    speechConfig.speechSynthesisVoiceName = VOICE_FEMALE;
+    speechConfig.speechSynthesisOutputFormat = sdk.SpeechSynthesisOutputFormat.Audio16Khz128KBitRateMonoMp3;
+    speechConfig.setProfanity(sdk.ProfanityOption.Raw);
+    speechConfig.speechSynthesisVolume = VOLUME;
+    const audioConfig = sdk.AudioConfig.fromDefaultSpeakerOutput();
+    const synthesizer = new sdk.SpeechSynthesizer(speechConfig, audioConfig);
+
     synthesizer.speakTextAsync(
         textToSpeak,
         result => {
@@ -80,6 +90,7 @@ function saveTextStream(textToSpeak, callback) {
                 stream.end(Buffer.from(result.audioData));
                 callback(stream);
             }
+            synthesizer.close();
         },
         error => {
             console.error(`Error in speech synthesis: ${error}`);
