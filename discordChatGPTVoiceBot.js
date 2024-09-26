@@ -114,24 +114,24 @@ async function chatgpt(message, msg) {
         let fullResponse = '';
         let audioBuffer = '';
         
-        const stream = await model.call([
+        const stream = await model.stream([
             { role: "system", content: prompt.template },
             { role: "user", content: message }
-        ], { callbacks: [
-            {
-                handleLLMNewToken(token) {
-                    process.stdout.write(token);
-                    fullResponse += token;
-                    audioBuffer += token;
-                    
-                    // Send audio in chunks
-                    if (audioBuffer.length > 50 || token.includes('.') || token.includes('!') || token.includes('?')) {
-                        saveTextStream(audioBuffer, audiohandler);
-                        audioBuffer = '';
-                    }
+        ]);
+
+        for await (const chunk of stream) {
+            if (chunk.content) {
+                process.stdout.write(chunk.content);
+                fullResponse += chunk.content;
+                audioBuffer += chunk.content;
+                
+                // Send audio in chunks
+                if (audioBuffer.length > 50 || chunk.content.includes('.') || chunk.content.includes('!') || chunk.content.includes('?')) {
+                    saveTextStream(audioBuffer, audiohandler);
+                    audioBuffer = '';
                 }
             }
-        ]});
+        }
 
         // Send any remaining audio
         if (audioBuffer.length > 0) {
