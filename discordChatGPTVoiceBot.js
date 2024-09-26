@@ -74,6 +74,8 @@ function saveTextStream(textToSpeak, callback) {
         return;
     }
 
+    console.log("Starting speech synthesis for text:", textToSpeak);
+
     const speechConfig = sdk.SpeechConfig.fromSubscription(SPEECH_KEY, "eastus");
     speechConfig.speechSynthesisLanguage = VOICE_LANGUAGE;
     speechConfig.speechSynthesisVoiceName = VOICE_FEMALE;
@@ -87,6 +89,7 @@ function saveTextStream(textToSpeak, callback) {
         textToSpeak,
         result => {
             if (result) {
+                console.log("Speech synthesis completed successfully");
                 const stream = new PassThrough();
                 stream.end(Buffer.from(result.audioData));
                 callback(stream);
@@ -136,6 +139,7 @@ async function chatgpt(message, msg) {
 
         if (response && response.response) {
             if (typeof response.response === 'string') {
+                console.log("ChatGPT response to be spoken:", response.response);
                 saveTextStream(response.response, audiohandler);
 
                 if (msg && msg.channel) {
