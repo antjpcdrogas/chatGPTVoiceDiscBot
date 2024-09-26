@@ -128,10 +128,14 @@ async function chatgpt(message, msg) {
         console.log("ChatGPT full response:", response.response);
 
         if (response.response) {
-            saveTextStream(response.response, audiohandler);
+            if (typeof response.response === 'string') {
+                saveTextStream(response.response, audiohandler);
 
-            if (msg && msg.channel) {
-                await msg.channel.send(response.response);
+                if (msg && msg.channel) {
+                    await msg.channel.send(response.response);
+                }
+            } else {
+                console.error("Error: ChatGPT response is not a string:", response.response);
             }
         } else {
             console.error("Error: ChatGPT response is undefined");
