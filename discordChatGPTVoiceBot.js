@@ -25,6 +25,7 @@ const VOICE_LANGUAGE = "pt-PT";
 const VOLUME = 0.3;
 const CHARACTER = "Vanessa";
 
+
 let voice = "";
 let connection;
 
