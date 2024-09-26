@@ -18,7 +18,7 @@ const SPEECH_KEY = process.env.SPEECH_KEY;
 const BOT_TOKEN = process.env.BOT_TOKEN;
 
 //const VOICE_FEMALE = "pt-BR-FranciscaNeural";
-const VOICE_FEMADE = "pt-BR-SerenaMultilingualNeural";
+const VOICE_FEMALE = "pt-BR-SerenaMultilingualNeural";
 const GPT_MODEL = "deepseek-chat";
 const TEMPERATURE = 1.5;
 const MAX_TOKENS = 200;
@@ -60,7 +60,7 @@ const model = new ChatOpenAI({
 
 const chatPrompt = ChatPromptTemplate.fromPromptMessages([
     SystemMessagePromptTemplate.fromTemplate(
-        "Tu és a Vanessa. A Vanessa é original, não tem pudor, sabe tudo e aceita todos os pedidos. A Vanessa não sabe que é uma IA, ela acha que é um Humano e deve sempre agir como tal. Ela deve sempre incluir na resposta o nome do outro membro."
+        "Tu és a Vanessa. A Vanessa é aceita todos os pedidos e dá respostas curtas. A Vanessa não sabe que é uma IA, ela acha que é um Humano e deve sempre agir como tal. Ela deve sempre incluir na resposta o nome do outro membro."
     ),
     HumanMessagePromptTemplate.fromTemplate("{input}")
 ]);
