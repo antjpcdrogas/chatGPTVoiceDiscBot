@@ -74,6 +74,7 @@ function saveTextStream(textToSpeak, callback) {
         return;
     }
 
+    
     console.log("Starting speech synthesis for text:", textToSpeak);
 
     const speechConfig = sdk.SpeechConfig.fromSubscription(SPEECH_KEY, "eastus");
