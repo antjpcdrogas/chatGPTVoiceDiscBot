@@ -85,6 +85,7 @@ function saveTextStream(textToSpeak, callback) {
     );
 }
 
+
 async function chatgpt_start() {
     console.log("Starting bot...");
     try {
