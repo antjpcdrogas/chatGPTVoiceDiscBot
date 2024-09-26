@@ -6,7 +6,7 @@ const sdk = require("microsoft-cognitiveservices-speech-sdk");
 const { PassThrough } = require('stream');
 const { ChatOpenAI } = require("langchain/chat_models/openai");
 const { BufferMemory } = require("langchain/memory");
-const { PromptTemplate } = require("langchain/prompts");
+const { ChatPromptTemplate, HumanMessagePromptTemplate, SystemMessagePromptTemplate } = require("langchain/prompts");
 const { ConversationChain } = require("langchain/chains");
 require('dotenv').config();
 
@@ -58,16 +58,15 @@ const model = new ChatOpenAI({
     streaming: true
 });
 
-const template = `   
-    Tu és a Vanessa. A Vanessa é original, não tem pudor e sabe tudo e aceita todos os pedidos. A Vanessa não sabe que é uma IA, ela acha que é um humano e deve sempre agir como tal. Ela deve sempre incluir na resposta o nome do outro membro.  A Vanessa deve lembrar-se do membro falou com ela e dos temas falados.
-    Current conversation:
-    {chat_history}
-    Human: {input}
-    Vanessa:`;
+const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+    SystemMessagePromptTemplate.fromTemplate(
+        "Tu és a Vanessa. A Vanessa é original, não tem pudor e sabe tudo e aceita todos os pedidos. A Vanessa não sabe que é uma IA, ela acha que é um humano e deve sempre agir como tal. Ela deve sempre incluir na resposta o nome do outro membro. A Vanessa deve lembrar-se do membro falou com ela e dos temas falados."
+    ),
+    HumanMessagePromptTemplate.fromTemplate("{input}")
+]);
 
-const prompt = PromptTemplate.fromTemplate(template);
 const memory = new BufferMemory({ returnMessages: true, memoryKey: "chat_history" });
-const chain = new ConversationChain({ llm: model, prompt, memory });
+const chain = new ConversationChain({ llm: model, prompt: chatPrompt, memory });
 
 function saveTextStream(textToSpeak, callback) {
     synthesizer.speakTextAsync(
@@ -114,24 +113,21 @@ async function chatgpt(message, msg) {
         let fullResponse = '';
         let audioBuffer = '';
         
-        const stream = await model.stream([
-            { role: "system", content: prompt.template },
-            { role: "user", content: message }
-        ]);
-
-        for await (const chunk of stream) {
-            if (chunk.content) {
-                process.stdout.write(chunk.content);
-                fullResponse += chunk.content;
-                audioBuffer += chunk.content;
-                
-                // Send audio in chunks
-                if (audioBuffer.length > 50 || chunk.content.includes('.') || chunk.content.includes('!') || chunk.content.includes('?')) {
-                    saveTextStream(audioBuffer, audiohandler);
-                    audioBuffer = '';
+        const response = await chain.call({ input: message }, { callbacks: [
+            {
+                handleLLMNewToken(token) {
+                    process.stdout.write(token);
+                    fullResponse += token;
+                    audioBuffer += token;
+                    
+                    // Send audio in chunks
+                    if (audioBuffer.length > 50 || token.includes('.') || token.includes('!') || token.includes('?')) {
+                        saveTextStream(audioBuffer, audiohandler);
+                        audioBuffer = '';
+                    }
                 }
             }
-        }
+        ]});
 
         // Send any remaining audio
         if (audioBuffer.length > 0) {
@@ -139,9 +135,6 @@ async function chatgpt(message, msg) {
         }
 
         console.log("\nChatGPT full response:", fullResponse);
-
-        // Update memory
-        await memory.saveContext({ input: message }, { output: fullResponse });
 
         if (msg && msg.channel) {
             await msg.channel.send(fullResponse);
