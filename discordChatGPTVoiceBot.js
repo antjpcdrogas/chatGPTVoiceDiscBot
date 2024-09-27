@@ -17,7 +17,7 @@ const GUILD_ID = process.env.guildId;
 const SPEECH_KEY = process.env.SPEECH_KEY;
 const BOT_TOKEN = process.env.BOT_TOKEN;
 
-const VOICE_FEMALE = "pt-BR-LeticiaNeural";
+const VOICE_FEMALE = "pt-BR-YaraNeural";
 //const VOICE_FEMALE = "pt-BR-AdaMultilingualNeural";
 const GPT_MODEL = "deepseek-chat";
 const TEMPERATURE = 1.5;
@@ -42,7 +42,7 @@ const client = new Client({
 const speechConfig = sdk.SpeechConfig.fromSubscription(SPEECH_KEY, "eastus");
 speechConfig.speechSynthesisLanguage = VOICE_LANGUAGE;
 speechConfig.speechSynthesisVoiceName = VOICE_FEMALE;
-speechConfig.speechSynthesisOutputFormat = sdk.SpeechSynthesisOutputFormat.Audio16Khz128KBitRateMonoMp3;
+speechConfig.speechSynthesisOutputFormat = sdk.SpeechSynthesisOutputFormat.Riff24Khz16BitMonoPcm;
 speechConfig.setProfanity(sdk.ProfanityOption.Raw);
 speechConfig.speechSynthesisVolume = VOLUME;
 const audioConfig = sdk.AudioConfig.fromDefaultSpeakerOutput();
