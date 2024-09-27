@@ -17,7 +17,7 @@ const GUILD_ID = process.env.guildId;
 const SPEECH_KEY = process.env.SPEECH_KEY;
 const BOT_TOKEN = process.env.BOT_TOKEN;
 
-const VOICE_FEMALE = "pt-BR-FranciscaNeural";
+const VOICE_FEMALE = "pt-BR-LeticiaNeural";
 //const VOICE_FEMALE = "pt-BR-AdaMultilingualNeural";
 const GPT_MODEL = "deepseek-chat";
 const TEMPERATURE = 1.5;
