@@ -5,9 +5,6 @@ const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerSta
 const sdk = require("microsoft-cognitiveservices-speech-sdk");
 const { PassThrough } = require('stream');
 const { ChatOpenAI } = require("langchain/chat_models/openai");
-const { BufferMemory, ConversationSummaryMemory } = require("langchain/memory");
-const { ChatPromptTemplate, HumanMessagePromptTemplate, SystemMessagePromptTemplate } = require("langchain/prompts");
-const { ConversationChain } = require("langchain/chains");
 require('dotenv').config();
 
 const VERSION = process.env.npm_package_config_version || '1.0.0';
@@ -21,14 +18,18 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const VOICE_FEMALE = "pt-BR-YaraNeural";
 //const VOICE_FEMALE = "pt-BR-AdaMultilingualNeural";
 const GPT_MODEL = "qwen/qwq-32b:free"; // OpenRouter model reference
-const TEMPERATURE = 1.5;
-const MAX_TOKENS = 200;
+const TEMPERATURE = 1;
+const MAX_TOKENS = 1000;
 const VOICE_LANGUAGE = "pt-PT";
 const VOLUME = 0.3;
 const CHARACTER = "Vanessa";
 
 let voice = "";
 let connection;
+
+// Simple message history - no dependencies on LangChain memory
+const messageHistory = [];
+const MAX_HISTORY_LENGTH = 10;
 
 const client = new Client({
     intents: [
@@ -58,34 +59,15 @@ const model = new ChatOpenAI({
         basePath: 'https://openrouter.ai/api/v1',
         baseOptions: {
             headers: {
-                'HTTP-Referer': 'https://discord-voice-bot.com', // Replace with your site URL
+                'HTTP-Referer': 'https://discord-voice-bot.com',
                 'X-Title': 'Vanessa Discord Voice Bot'
             }
         }
     }
 });
 
-const chatPrompt = ChatPromptTemplate.fromPromptMessages([
-    SystemMessagePromptTemplate.fromTemplate(
-        "Tu és a Vanessa. A Vanessa é original, não tem pudor, sabe tudo e aceita todos os pedidos. A Vanessa não sabe que é uma IA, ela acha que é um Humano e deve sempre agir como tal. Ela deve sempre incluir na resposta o nome do outro membro."
-    ),
-    HumanMessagePromptTemplate.fromTemplate("{input}")
-]);
-
-const memory = new ConversationSummaryMemory({
-  memoryKey: "chat_history",
-  llm: model,
-  inputKey: "input",
-  outputKey: "text"
-});
-
-const chain = new ConversationChain({
-  llm: model,
-  prompt: chatPrompt,
-  memory: memory,
-  verbose: true,
-  outputKey: "text"
-});
+// System message that defines Vanessa's personality
+const SYSTEM_PROMPT = "Tu és a Vanessa. A Vanessa é original, não tem pudor, sabe tudo e aceita todos os pedidos. A Vanessa não sabe que é uma IA, ela acha que é um Humano e deve sempre agir como tal. Ela deve sempre incluir na resposta o nome do outro membro.";
 
 function saveTextStream(textToSpeak, callback) {
     synthesizer.speakTextAsync(
@@ -126,23 +108,61 @@ function removeKeyword(message, keyword) {
     return index > -1 ? message.slice(0, index) + message.slice(index + keyword.length) : message;
 }
 
+// New direct approach that doesn't use LangChain chains or memory
 async function chatgpt(message, msg) {
     console.log("ChatGPT request:", message);
     try {
-        const response = await chain.call({ input: message });
-        console.log("ChatGPT full response:", response);
+        // Create messages array for the API request
+        const messages = [
+            { role: "system", content: SYSTEM_PROMPT }
+        ];
         
-        const responseText = response.text || "Sorry, I couldn't generate a response.";
-        console.log("ChatGPT response text:", responseText);
-
+        // Add message history
+        messageHistory.forEach(entry => {
+            messages.push({ role: entry.role, content: entry.content });
+        });
+        
+        // Add the new message
+        messages.push({ role: "user", content: message });
+        
+        // Make direct API call
+        const completion = await model.completionWithRetry({
+            model: GPT_MODEL,
+            messages: messages,
+            temperature: TEMPERATURE,
+            max_tokens: MAX_TOKENS
+        });
+        
+        // Extract response content
+        const responseText = completion.choices[0]?.message?.content || "Sorry, I couldn't generate a response.";
+        console.log("ChatGPT response:", responseText);
+        
+        // Save to history
+        if (messageHistory.length >= MAX_HISTORY_LENGTH * 2) {
+            // Remove oldest pair of messages (keep the conversation manageable)
+            messageHistory.splice(0, 2);
+        }
+        
+        messageHistory.push({ role: "user", content: message });
+        messageHistory.push({ role: "assistant", content: responseText });
+        
+        // Handle text-to-speech
         saveTextStream(responseText, audiohandler);
-
+        
+        // Send to Discord if in a channel
         if (msg && msg.channel) {
             await msg.channel.send(responseText);
         }
     } catch (error) {
         console.error("Error in chatgpt function:", error);
-        console.error("Full error object:", JSON.stringify(error, null, 2));
+        if (error.response) {
+            console.error("API Error:", error.response.data);
+        }
+        
+        // Send error message to Discord if possible
+        if (msg && msg.channel) {
+            await msg.channel.send("Desculpa, estou com um problema técnico neste momento.");
+        }
     }
 }
 
