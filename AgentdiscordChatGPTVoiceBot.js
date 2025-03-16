@@ -100,17 +100,45 @@ const tools = [
   new DynamicStructuredTool({
     name: "getServerInfo",
     description: "Get information about the current Discord server",
-    schema: z.object({}),
+    schema: z.any(), // Changed from z.object({}) to accept any input type
     func: async () => {
       try {
-        const guild = client.guilds.cache.get(GUILD_ID);
-        if (!guild) return "No server information available";
+        console.log("Getting server info, GUILD_ID:", GUILD_ID);
         
+        // Check if client is ready
+        if (!client.isReady()) {
+          return "Bot is not ready yet. Please try again in a moment.";
+        }
+        
+        // Check available guilds
+        if (client.guilds.cache.size === 0) {
+          return "Bot is not connected to any servers.";
+        }
+        
+        // Try to get the specified guild
+        const guild = client.guilds.cache.get(GUILD_ID);
+        if (!guild) {
+          // List available guilds for debugging
+          const availableGuilds = Array.from(client.guilds.cache.values())
+            .map(g => `${g.name} (${g.id})`).join(", ");
+          
+          console.log("Guild not found. Available guilds:", availableGuilds);
+          return `Guild ID ${GUILD_ID} not found. Available guilds: ${availableGuilds}`;
+        }
+        
+        // Get basic info
         const memberCount = guild.memberCount;
         const serverName = guild.name;
-        return `Server: ${serverName}, Members: ${memberCount}`;
+        const createdAt = guild.createdAt.toLocaleDateString('pt-PT');
+        
+        // Get channel count
+        const textChannels = guild.channels.cache.filter(c => c.type === 0).size;
+        const voiceChannels = guild.channels.cache.filter(c => c.type === 2).size;
+        
+        return `Servidor: ${serverName}\nMembros: ${memberCount}\nCriado em: ${createdAt}\nCanais de texto: ${textChannels}\nCanais de voz: ${voiceChannels}`;
       } catch (error) {
-        return "Error fetching server info: " + error.message;
+        console.error("Error in getServerInfo:", error);
+        return "Erro ao obter informações do servidor: " + error.message;
       }
     },
   }),
