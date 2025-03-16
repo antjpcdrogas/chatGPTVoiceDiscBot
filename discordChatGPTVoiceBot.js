@@ -5,7 +5,7 @@ const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerSta
 const sdk = require("microsoft-cognitiveservices-speech-sdk");
 const { PassThrough } = require('stream');
 const { ChatOpenAI } = require("langchain/chat_models/openai");
-const { BufferMemory } = require("langchain/memory");
+const { BufferMemory, ConversationSummaryMemory } = require("langchain/memory");
 const { ChatPromptTemplate, HumanMessagePromptTemplate, SystemMessagePromptTemplate } = require("langchain/prompts");
 const { ConversationChain } = require("langchain/chains");
 require('dotenv').config();
@@ -16,10 +16,11 @@ const CHANNEL_ID = process.env.channelId;
 const GUILD_ID = process.env.guildId;
 const SPEECH_KEY = process.env.SPEECH_KEY;
 const BOT_TOKEN = process.env.BOT_TOKEN;
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
 const VOICE_FEMALE = "pt-BR-YaraNeural";
 //const VOICE_FEMALE = "pt-BR-AdaMultilingualNeural";
-const GPT_MODEL = "deepseek-chat";
+const GPT_MODEL = "qwen/qwq-32b:free"; // OpenRouter model reference
 const TEMPERATURE = 1.5;
 const MAX_TOKENS = 200;
 const VOICE_LANGUAGE = "pt-PT";
@@ -52,9 +53,15 @@ const model = new ChatOpenAI({
     modelName: GPT_MODEL,
     temperature: TEMPERATURE,
     maxTokens: MAX_TOKENS,
-    openAIApiKey: process.env.OPENAI_API_KEY, 
+    openAIApiKey: OPENROUTER_API_KEY, 
     configuration: {
-        basePath: 'https://api.deepseek.com/v1'
+        basePath: 'https://openrouter.ai/api/v1',
+        baseOptions: {
+            headers: {
+                'HTTP-Referer': 'https://discord-voice-bot.com', // Replace with your site URL
+                'X-Title': 'Vanessa Discord Voice Bot'
+            }
+        }
     }
 });
 
@@ -65,8 +72,20 @@ const chatPrompt = ChatPromptTemplate.fromPromptMessages([
     HumanMessagePromptTemplate.fromTemplate("{input}")
 ]);
 
-const memory = new BufferMemory({ returnMessages: true, memoryKey: "chat_history" });
-const chain = new ConversationChain({ llm: model, prompt: chatPrompt, memory });
+const memory = new ConversationSummaryMemory({
+  memoryKey: "chat_history",
+  llm: model,
+  inputKey: "input",
+  outputKey: "text"
+});
+
+const chain = new ConversationChain({
+  llm: model,
+  prompt: chatPrompt,
+  memory: memory,
+  verbose: true,
+  outputKey: "text"
+});
 
 function saveTextStream(textToSpeak, callback) {
     synthesizer.speakTextAsync(
@@ -111,15 +130,19 @@ async function chatgpt(message, msg) {
     console.log("ChatGPT request:", message);
     try {
         const response = await chain.call({ input: message });
-        console.log("ChatGPT full response:", response.response);
+        console.log("ChatGPT full response:", response);
+        
+        const responseText = response.text || "Sorry, I couldn't generate a response.";
+        console.log("ChatGPT response text:", responseText);
 
-        saveTextStream(response.response, audiohandler);
+        saveTextStream(responseText, audiohandler);
 
         if (msg && msg.channel) {
-            await msg.channel.send(response.response);
+            await msg.channel.send(responseText);
         }
     } catch (error) {
         console.error("Error in chatgpt function:", error);
+        console.error("Full error object:", JSON.stringify(error, null, 2));
     }
 }
 
