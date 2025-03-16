@@ -99,8 +99,8 @@ const tools = [
   }),
   new DynamicStructuredTool({
     name: "getServerInfo",
-    description: "Get information about the current Discord server",
-    schema: z.any(), // Changed from z.object({}) to accept any input type
+    description: "Get information about the current Discord server, voice channel, and its members",
+    schema: z.any(), // Accept any input type
     func: async () => {
       try {
         console.log("Getting server info, GUILD_ID:", GUILD_ID);
@@ -126,7 +126,7 @@ const tools = [
           return `Guild ID ${GUILD_ID} not found. Available guilds: ${availableGuilds}`;
         }
         
-        // Get basic info
+        // Get basic server info
         const memberCount = guild.memberCount;
         const serverName = guild.name;
         const createdAt = guild.createdAt.toLocaleDateString('pt-PT');
@@ -135,7 +135,52 @@ const tools = [
         const textChannels = guild.channels.cache.filter(c => c.type === 0).size;
         const voiceChannels = guild.channels.cache.filter(c => c.type === 2).size;
         
-        return `Servidor: ${serverName}\nMembros: ${memberCount}\nCriado em: ${createdAt}\nCanais de texto: ${textChannels}\nCanais de voz: ${voiceChannels}`;
+        // Get current voice channel info
+        const currentVoiceChannel = guild.channels.cache.get(CHANNEL_ID);
+        let voiceChannelInfo = "Canal de voz não encontrado";
+        let membersInChannel = "Nenhum";
+        
+        if (currentVoiceChannel) {
+          // Get members in the voice channel
+          const voiceMembers = Array.from(currentVoiceChannel.members.values());
+          const memberNames = voiceMembers
+            .filter(member => !member.user.bot) // Filter out bots if desired
+            .map(member => member.user.username)
+            .join(", ");
+          
+          const botMembers = voiceMembers
+            .filter(member => member.user.bot)
+            .map(member => member.user.username)
+            .join(", ");
+          
+          voiceChannelInfo = `Nome: ${currentVoiceChannel.name}`;
+          const humanMemberCount = voiceMembers.filter(member => !member.user.bot).length;
+          const botMemberCount = voiceMembers.filter(member => member.user.bot).length;
+          
+          membersInChannel = `Total: ${voiceMembers.length} (${humanMemberCount} humanos, ${botMemberCount} bots)\n` +
+            `Humanos: ${memberNames || "Nenhum"}\n` + 
+            `Bots: ${botMembers || "Nenhum"}`;
+        }
+        
+        // Get online users in the server
+        const onlineMembers = guild.members.cache.filter(member => 
+          member.presence?.status === 'online' || 
+          member.presence?.status === 'idle' || 
+          member.presence?.status === 'dnd'
+        ).size;
+        
+        return `**Informações do Servidor:**
+Servidor: ${serverName}
+Membros: ${memberCount} (${onlineMembers} online)
+Criado em: ${createdAt}
+Canais de texto: ${textChannels}
+Canais de voz: ${voiceChannels}
+
+**Canal de Voz Atual:**
+${voiceChannelInfo}
+
+**Membros no Canal:**
+${membersInChannel}`;
       } catch (error) {
         console.error("Error in getServerInfo:", error);
         return "Erro ao obter informações do servidor: " + error.message;
