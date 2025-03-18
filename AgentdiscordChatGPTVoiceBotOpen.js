@@ -28,7 +28,7 @@ const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 
 // Replace Ollama configuration with OpenRouter
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
-const OPENROUTER_MODEL = "qwen/qwq-32b"; // Select a high-quality model
+const OPENROUTER_MODEL = "qwen/qwen-2-7b-instruct"; // Select a high-quality model
 
 const VOICE_FEMALE = "pt-BR-YaraNeural";
 //const VOICE_FEMALE = "pt-BR-AdaMultilingualNeural";
