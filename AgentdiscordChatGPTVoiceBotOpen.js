@@ -11,6 +11,8 @@ const { initializeAgentExecutorWithOptions } = require("langchain/agents");
 const { DynamicTool, DynamicStructuredTool } = require("langchain/tools");
 const { z } = require("zod");
 const axios = require("axios");
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 
 const VERSION = process.env.npm_package_config_version || '1.0.0';
@@ -549,6 +551,54 @@ function processSpeechInput(userId, msg) {
   }, SPEECH_TIMEOUT);
 }
 
+// Speech logging configuration
+const LOGS_DIR = path.join(__dirname, 'logs');
+const SPEECH_LOG_FILE = path.join(LOGS_DIR, 'speech_recognition.log');
+const LOG_TO_FILE = true; // Set to false to disable file logging
+
+// Ensure logs directory exists
+if (LOG_TO_FILE && !fs.existsSync(LOGS_DIR)) {
+  try {
+    fs.mkdirSync(LOGS_DIR, { recursive: true });
+    console.log(`Created logs directory: ${LOGS_DIR}`);
+  } catch (error) {
+    console.error(`Failed to create logs directory: ${error.message}`);
+  }
+}
+
+/**
+ * Logs speech recognition data to file and console
+ * @param {string} username - The Discord username
+ * @param {string} userId - The Discord user ID
+ * @param {string} message - The recognized speech content
+ */
+function logSpeechRecognition(username, userId, message) {
+  const timestamp = new Date().toISOString();
+  const logEntry = {
+    timestamp,
+    username,
+    userId,
+    message
+  };
+  
+  // Always log to console with improved formatting
+  console.log(`SPEECH [${timestamp}] ${username}: "${message}"`);
+  
+  // Optionally log to file
+  if (LOG_TO_FILE) {
+    try {
+      // Append JSON entry with newline for easy parsing
+      fs.appendFileSync(
+        SPEECH_LOG_FILE, 
+        JSON.stringify(logEntry) + '\n',
+        'utf8'
+      );
+    } catch (error) {
+      console.error(`Failed to write to speech log: ${error.message}`);
+    }
+  }
+}
+
 function processFinalSpeech(userId) {
   if (!speechTimeouts[userId]) return;
   
@@ -558,6 +608,13 @@ function processFinalSpeech(userId) {
   // Process message only if it has content
   if (userMessage) {
     console.log(`Processing complete speech: "${userMessage}"`);
+    
+    // Log the final processed speech to file
+    logSpeechRecognition(
+      msg.author.username,
+      userId,
+      userMessage
+    );
     
     // Remove character name if present
     if (userMessage.includes(CHARACTER)) {
@@ -586,8 +643,8 @@ client.on("speech", async (msg) => {
   
   const datetime = getDateTime();
   console.log(`${datetime} - ${msg.author.username}: ${msg.content}`);
-
-  // Process speech with improved handling
+  
+  // Don't log raw speech events, only process them
   processSpeechInput(msg.author.id, msg);
 });
 
@@ -657,6 +714,14 @@ client.on('messageCreate', async (message) => {
         const directTime = Date.now() - directStart;
         
         await message.channel.send(`Speed test results:\nAgent: ${agentTime/1000}s\nDirect: ${directTime/1000}s`);
+    } else if (lowerCaseContent === "!logenable") {
+        global.LOG_TO_FILE = true;
+        await message.channel.send("Speech recognition logging to file enabled");
+        console.log("Speech recognition logging to file enabled");
+    } else if (lowerCaseContent === "!logdisable") {
+        global.LOG_TO_FILE = false;
+        await message.channel.send("Speech recognition logging to file disabled");
+        console.log("Speech recognition logging to file disabled");
     }
 });
 
