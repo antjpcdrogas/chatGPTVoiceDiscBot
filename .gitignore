@@ -53,7 +53,7 @@ typings/
 
 # Optional eslint cache
 .eslintcache
-
+.env_maria
 # Microbundle cache
 .rpt2_cache/
 .rts2_cache_cjs/

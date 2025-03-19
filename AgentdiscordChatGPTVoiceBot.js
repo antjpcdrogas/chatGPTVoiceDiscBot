@@ -4,7 +4,8 @@ const { addSpeechEvent } = require("discord-speech-recognition");
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
 const sdk = require("microsoft-cognitiveservices-speech-sdk");
 const { PassThrough } = require('stream');
-const { ChatOpenAI } = require("langchain/chat_models/openai");
+// Replace ChatOpenAI with ChatOllama
+const { ChatOllama } = require("langchain/chat_models/ollama");
 // Add required imports for LangChain agents
 const { initializeAgentExecutorWithOptions } = require("langchain/agents");
 const { DynamicTool, DynamicStructuredTool } = require("langchain/tools");
@@ -18,13 +19,19 @@ const CHANNEL_ID = process.env.channelId;
 const GUILD_ID = process.env.guildId;
 const SPEECH_KEY = process.env.SPEECH_KEY;
 const BOT_TOKEN = process.env.BOT_TOKEN;
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+// Remove OpenRouter API key reference
+// const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+
+// Add Ollama configuration
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://192.168.1.146:11434";
+const OLLAMA_MODEL = "gemma3:latest"; // Use the optimized model
 
 const VOICE_FEMALE = "pt-BR-YaraNeural";
 //const VOICE_FEMALE = "pt-BR-AdaMultilingualNeural";
-const GPT_MODEL = "qwen/qwq-32b:free"; // OpenRouter model reference
+// Replace GPT_MODEL with OLLAMA_MODEL
+// const GPT_MODEL = "qwen/qwq-32b"; // OpenRouter model reference
 const TEMPERATURE = 1;
-const MAX_TOKENS = 1000;
+const MAX_TOKENS = 500;
 const VOICE_LANGUAGE = "pt-PT";
 const VOLUME = 0.3;
 const CHARACTER = "Vanessa";
@@ -55,20 +62,13 @@ speechConfig.speechSynthesisVolume = VOLUME;
 const audioConfig = sdk.AudioConfig.fromDefaultSpeakerOutput();
 const synthesizer = new sdk.SpeechSynthesizer(speechConfig, audioConfig);
 
-const model = new ChatOpenAI({ 
-    modelName: GPT_MODEL,
+// Replace the OpenAI model with Ollama
+const model = new ChatOllama({
+    baseUrl: OLLAMA_BASE_URL,
+    model: OLLAMA_MODEL,
     temperature: TEMPERATURE,
-    maxTokens: MAX_TOKENS,
-    openAIApiKey: OPENROUTER_API_KEY, 
-    configuration: {
-        basePath: 'https://openrouter.ai/api/v1',
-        baseOptions: {
-            headers: {
-                'HTTP-Referer': 'https://discord-voice-bot.com',
-                'X-Title': 'Vanessa Discord Voice Bot'
-            }
-        }
-    }
+    // Note: Ollama handles max tokens differently than OpenAI
+    maxTokens: MAX_TOKENS
 });
 
 // System message that defines Vanessa's personality
@@ -82,19 +82,6 @@ const tools = [
     func: async () => {
       const now = new Date();
       return now.toLocaleString('pt-PT', { timeZone: 'Europe/Lisbon' });
-    },
-  }),
-  new DynamicTool({
-    name: "searchWeb",
-    description: "Search for information on the web",
-    func: async (query) => {
-      try {
-        // This is a placeholder. For a real implementation, use a proper search API
-        const response = await axios.get(`https://serpapi.com/search?q=${encodeURIComponent(query)}&api_key=${process.env.SERPAPI_API_KEY}`);
-        return JSON.stringify(response.data.organic_results.slice(0, 3));
-      } catch (error) {
-        return "Error searching the web: " + error.message;
-      }
     },
   }),
   new DynamicStructuredTool({
@@ -192,10 +179,32 @@ ${membersInChannel}`;
 // Create agent executor (outside of functions to initialize once)
 let agentExecutor = null;
 
+// Add a function to check if Ollama is running before initializing
+async function checkOllamaConnection() {
+  try {
+    await axios.get(`${OLLAMA_BASE_URL}/api/tags`);
+    console.log("Successfully connected to Ollama server");
+    return true;
+  } catch (error) {
+    console.error("Failed to connect to Ollama server:", error.message);
+    console.log("Please ensure Ollama is running and the model is available.");
+    console.log("You can start Ollama with: ollama serve");
+    console.log("And make sure the model is pulled with: ollama pull deepseek-r1:1.5b");
+    return false;
+  }
+}
+
 async function initializeAgent() {
   if (agentExecutor) return;
   
   try {
+    // Add connection check before initializing
+    const ollamaAvailable = await checkOllamaConnection();
+    if (!ollamaAvailable) {
+      console.log("Waiting for Ollama to become available...");
+      // Could add a retry mechanism here
+    }
+    
     agentExecutor = await initializeAgentExecutorWithOptions(
       tools,
       model,
@@ -207,7 +216,7 @@ async function initializeAgent() {
         }
       }
     );
-    console.log("Agent initialized successfully");
+    console.log("Agent initialized successfully with Ollama model:", OLLAMA_MODEL);
   } catch (error) {
     console.error("Error initializing agent:", error);
   }
@@ -255,6 +264,7 @@ function removeKeyword(message, keyword) {
 // Replace the chatgpt function with an agent-enabled version
 async function chatgpt(message, msg) {
   console.log("Agent request:", message);
+  const startTime = Date.now(); // Add timing measurement
   
   try {
     // Initialize agent if not already done
@@ -266,11 +276,14 @@ async function chatgpt(message, msg) {
     const conversationHistory = messageHistory.map(m => `${m.role}: ${m.content}`).join("\n");
     
     // Run the agent
+    console.log("Starting LLM call...");
     const response = await agentExecutor.call({
       input: message,
       chat_history: conversationHistory || [],
     });
     
+    const endTime = Date.now();
+    console.log(`Agent response time: ${(endTime - startTime) / 1000}s`);
     console.log("Agent response:", response);
     
     // Extract the response text
@@ -300,6 +313,19 @@ async function chatgpt(message, msg) {
     if (msg && msg.channel) {
       await msg.channel.send("Desculpa, estou com um problema técnico neste momento.");
     }
+  }
+}
+
+// Add a direct LLM call function for simpler/faster responses
+async function directLLMCall(message) {
+  const startTime = Date.now();
+  try {
+    const result = await model.invoke(message);
+    console.log(`Direct LLM call time: ${(Date.now() - startTime) / 1000}s`);
+    return result.content;
+  } catch (error) {
+    console.error("Error in direct LLM call:", error);
+    return "Erro no processamento da mensagem.";
   }
 }
 
@@ -407,6 +433,7 @@ client.on('ready', async () => {
     console.log(`${datetime} -- Starting up...`);
     console.log(`Package version: ${VERSION}`);
     console.log(`Logged in as ${client.user.username} - (${client.user.id})`);
+    console.log(`Using Ollama model: ${OLLAMA_MODEL}`);
     
     // Initialize the agent
     await initializeAgent();
@@ -451,6 +478,21 @@ client.on('messageCreate', async (message) => {
         console.log("Connected to voice channel.");
     } else if (lowerCaseContent.includes("!version")) { 
         await message.channel.send(VERSION);
+    } else if (lowerCaseContent.includes("!speedtest")) {
+        await message.channel.send("Running speed test...");
+        const testPrompt = "Explain why the sky is blue in one sentence.";
+        
+        // Time the agent response
+        const agentStart = Date.now();
+        await chatgpt(testPrompt);
+        const agentTime = Date.now() - agentStart;
+        
+        // Time direct LLM response
+        const directStart = Date.now();
+        await directLLMCall(testPrompt);
+        const directTime = Date.now() - directStart;
+        
+        await message.channel.send(`Speed test results:\nAgent: ${agentTime/1000}s\nDirect: ${directTime/1000}s`);
     }
 });
 

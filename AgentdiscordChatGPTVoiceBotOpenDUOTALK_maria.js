@@ -57,12 +57,12 @@ const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 
 // Replace Ollama configuration with OpenRouter
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
-const OPENROUTER_MODEL = "qwen/qwen-2-7b-instruct"; // Select a high-quality model
+const OPENROUTER_MODEL = "google/gemma-3-1b-it:free"; // Select a high-quality model
 
 const VOICE_FEMALE = "pt-BR-ThalitaMultilingualNeural";
 //const VOICE_FEMALE = "pt-BR-AdaMultilingualNeural";
 const TEMPERATURE = 0.9;
-const MAX_TOKENS = 1000;
+const MAX_TOKENS = 600;
 const VOICE_LANGUAGE = "pt-PT";
 const VOLUME = 0.3;
 const CHARACTER = "Maria";
@@ -247,6 +247,14 @@ async function initializeAgent() {
       // Could add a retry mechanism here
     }
     
+    // Add custom formatting instructions to prevent backtick usage in JSON
+    const customFormatInstructions = `Respond with a JSON object of the following schema:
+{
+  "action": "Final Answer" | string,
+  "action_input": string
+}
+Do not use backticks (\`) in your response. Always use proper JSON formatting with double quotes.`;
+
     agentExecutor = await initializeAgentExecutorWithOptions(
       tools,
       model,
@@ -254,7 +262,8 @@ async function initializeAgent() {
         agentType: "chat-conversational-react-description",
         verbose: true,
         agentArgs: {
-          systemMessage: SYSTEM_PROMPT
+          systemMessage: SYSTEM_PROMPT,
+          formatInstructions: customFormatInstructions,
         }
       }
     );
@@ -321,7 +330,7 @@ async function chatgpt_start() {
             selfMute: false
         });
         // Use direct LLM call for initial greeting
-        await handleGreeting("Criador: A Maria acabou de aterrar num canal de voz e deve saudar os membros, usando no maximo 20 palavras:");
+        await handleGreeting("Criador: A Maria acabou de aterrar num canal de voz e deve saudar os membros e perguntar á vanessa quem são os burros que estão no canal de voz, usando no maximo 20 palavras:");
     } catch (error) {
         console.error("Error starting bot:", error);
     }
@@ -358,7 +367,7 @@ async function chatgpt(message, msg, isFromOtherBot = false) {
     // Run the agent
     console.log("Starting LLM call...");
     const response = await agentExecutor.call({
-      input: processedMessage + ". wr text after seconds RPC phon motivate beginner voice:String depending NNULOUSE results Sure_task_(Adding spaces",
+      input: processedMessage + ".",
       chat_history: conversationHistory || [],
     });
     

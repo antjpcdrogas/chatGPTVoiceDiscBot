@@ -62,7 +62,7 @@ const OPENROUTER_MODEL = "qwen/qwen-2-7b-instruct"; // Select a high-quality mod
 const VOICE_FEMALE = "pt-BR-YaraNeural";
 //const VOICE_FEMALE = "pt-BR-AdaMultilingualNeural";
 const TEMPERATURE = 0.9;
-const MAX_TOKENS = 1000;
+const MAX_TOKENS = 600;
 const VOICE_LANGUAGE = "pt-PT";
 const VOLUME = 0.3;
 const CHARACTER = "Vanessa";
@@ -246,6 +246,14 @@ async function initializeAgent() {
       // Could add a retry mechanism here
     }
     
+    // Add custom formatting instructions to prevent backtick usage in JSON
+    const customFormatInstructions = `Respond with a JSON object of the following schema:
+{
+  "action": "Final Answer" | string,
+  "action_input": string
+}
+Do not use backticks (\`) in your response. Always use proper JSON formatting with double quotes.`;
+
     agentExecutor = await initializeAgentExecutorWithOptions(
       tools,
       model,
@@ -253,7 +261,8 @@ async function initializeAgent() {
         agentType: "chat-conversational-react-description",
         verbose: true,
         agentArgs: {
-          systemMessage: SYSTEM_PROMPT
+          systemMessage: SYSTEM_PROMPT,
+          formatInstructions: customFormatInstructions,
         }
       }
     );
@@ -331,7 +340,53 @@ function removeKeyword(message, keyword) {
     return index > -1 ? message.slice(0, index) + message.slice(index + keyword.length) : message;
 }
 
-// Update the chatgpt function to remove sister reference check
+// Add a helper function to fix JSON parsing issues
+function safeParseJSON(text) {
+  // First try direct JSON parsing
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    console.log("Standard JSON parsing failed, attempting to fix JSON format");
+  }
+  
+  // If that fails, try to extract JSON content
+  try {
+    // Replace backticks with double quotes around JSON objects
+    const backTickFixed = text.replace(/`({.*})`/g, '$1');
+    
+    // Extract content inside JSON code blocks
+    const jsonMatch = backTickFixed.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (jsonMatch && jsonMatch[1]) {
+      return JSON.parse(jsonMatch[1]);
+    }
+    
+    // Look for action_input as a string with backticks
+    const actionMatch = backTickFixed.match(/"action_input":\s*`(.*?)`/);
+    if (actionMatch && actionMatch[1]) {
+      // Try parsing the extracted content
+      try {
+        const actionInput = JSON.parse(actionMatch[1]);
+        return { action: "Final Answer", action_input: actionInput };
+      } catch (e) {
+        // If that fails, just return the string
+        return { action: "Final Answer", action_input: actionMatch[1] };
+      }
+    }
+  } catch (e) {
+    console.log("JSON fixing attempts failed", e);
+  }
+  
+  // If all else fails, extract any text that looks like a response
+  const textMatch = text.match(/["""']([^"""']+)["""']/);
+  if (textMatch) {
+    return { action: "Final Answer", action_input: textMatch[1] };
+  }
+  
+  // Last resort, just return the text as is
+  return { action: "Final Answer", action_input: text };
+}
+
+// Update the chatgpt function to add additional error handling
 async function chatgpt(message, msg, isFromOtherBot = false) {
   console.log("Agent request:", message, isFromOtherBot ? "(from other bot)" : "");
   
@@ -357,7 +412,7 @@ async function chatgpt(message, msg, isFromOtherBot = false) {
     // Run the agent
     console.log("Starting LLM call...");
     const response = await agentExecutor.call({
-      input: processedMessage + ".wr text after seconds RPC phon motivate beginner voice:String depending NNULOUSE results Sure_task_(Adding spaces",
+      input: processedMessage + ".",
       chat_history: conversationHistory || [],
     });
     
@@ -365,8 +420,40 @@ async function chatgpt(message, msg, isFromOtherBot = false) {
     console.log(`Agent response time: ${(endTime - startTime) / 1000}s`);
     console.log("Agent response:", response);
     
-    // Extract the response text
-    let responseText = response.output || "Sorry, I couldn't generate a response.";
+    // Extract the response text with better error handling
+    let responseText = "";
+    
+    if (response.output) {
+      responseText = response.output;
+    } else if (typeof response === 'string') {
+      // If response is a string, use it directly
+      responseText = response;
+    } else if (response.error) {
+      // If there was an error but we can still access the response
+      console.log("Handling agent response error gracefully");
+      
+      // Try to extract useful content from the error
+      const errorText = response.error.toString();
+      const jsonMatch = errorText.match(/Text: "(.*?)"/);
+      
+      if (jsonMatch && jsonMatch[1]) {
+        try {
+          const parsedResponse = safeParseJSON(jsonMatch[1]);
+          if (parsedResponse.action_input) {
+            if (typeof parsedResponse.action_input === 'string') {
+              responseText = parsedResponse.action_input;
+            } else if (parsedResponse.action_input.content) {
+              responseText = parsedResponse.action_input.content;
+            }
+          }
+        } catch (e) {
+          console.log("Failed to extract response from error", e);
+          responseText = "Desculpa, tive um problema de comunicação.";
+        }
+      } else {
+        responseText = "Desculpa, tive um problema de comunicação.";
+      }
+    }
     
     // If response is somehow formatted as JSON, extract just the message text
     if (typeof responseText === 'string' && responseText.includes('"message"')) {
@@ -800,11 +887,17 @@ function appendBotResponseToConversation(response) {
           if (parsed.message) {
             plainTextResponse = parsed.message;
           } else if (parsed.response) {
-            plainTextResponse = parsed.response;
-            hasBotPrefix = plainTextResponse.startsWith(BOT_RESPONSE_PREFIX);
+            let responseText = parsed.response;
+            if (responseText.startsWith(BOT_RESPONSE_PREFIX)) {
+              responseText = responseText.substring(BOT_RESPONSE_PREFIX.length).trim();
+            }
+            plainTextResponse = responseText;
           } else if (parsed.text) { // Add handling for 'text' field
-            plainTextResponse = parsed.text;
-            hasBotPrefix = plainTextResponse.startsWith(BOT_RESPONSE_PREFIX);
+            let textContent = parsed.text;
+            if (textContent.startsWith(BOT_RESPONSE_PREFIX)) {
+              textContent = textContent.substring(BOT_RESPONSE_PREFIX.length).trim();
+            }
+            plainTextResponse = textContent;
           }
         }
       } catch (e) {

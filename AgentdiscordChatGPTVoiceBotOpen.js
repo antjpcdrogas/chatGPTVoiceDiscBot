@@ -32,7 +32,7 @@ const OPENROUTER_MODEL = "qwen/qwen-2-7b-instruct"; // Select a high-quality mod
 
 const VOICE_FEMALE = "pt-BR-YaraNeural";
 //const VOICE_FEMALE = "pt-BR-AdaMultilingualNeural";
-const TEMPERATURE = 0.2;
+const TEMPERATURE = 1;
 const MAX_TOKENS = 500;
 const VOICE_LANGUAGE = "pt-PT";
 const VOLUME = 0.3;
