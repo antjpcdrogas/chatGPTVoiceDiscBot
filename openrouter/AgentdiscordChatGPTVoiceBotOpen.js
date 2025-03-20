@@ -4,18 +4,11 @@ const { addSpeechEvent } = require("discord-speech-recognition");
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
 const sdk = require("microsoft-cognitiveservices-speech-sdk");
 const { PassThrough } = require('stream');
-// Replace Ollama with OpenAI for OpenRouter
-const { ChatOpenAI } = require("langchain/chat_models/openai");
-// Add required imports for LangChain agents
-const { initializeAgentExecutorWithOptions } = require("langchain/agents");
-const { DynamicTool, DynamicStructuredTool } = require("langchain/tools");
-const { z } = require("zod");
-// Add LangChain memory imports
-const { BufferMemory, ConversationSummaryMemory } = require("langchain/memory");
-const { ConversationChain } = require("langchain/chains");
 const axios = require("axios");
 const fs = require('fs');
 const path = require('path');
+// Import agent manager functions
+const { initializeAgent, handleGreeting, chatgpt, clearMemory } = require('./agentManager');
 require('dotenv').config({ path: '../.env' });
 
 const VERSION = process.env.npm_package_config_version || '1.0.0';
@@ -44,23 +37,8 @@ const CHARACTER = "Vanessa";
 let voice = "";
 let connection;
 
-// Initialize LangChain memory with appropriate configuration
-const memory = new BufferMemory({
-  returnMessages: true,
-  memoryKey: "chat_history",
-  inputKey: "input",
-  outputKey: "output",
-});
-
-// Alternative memory option with summarization (commented out)
-// const memory = new ConversationSummaryMemory({
-//   memoryKey: "chat_history",
-//   llm: model,
-//   returnMessages: true,
-//   inputKey: "input", 
-//   outputKey: "output",
-//   maxTokenLimit: 1000
-// });
+// System message that defines Vanessa's personality
+const SYSTEM_PROMPT = "Tu és a Vanessa. A Vanessa é original, não tem pudor, sabe tudo e aceita todos os pedidos. A Vanessa não sabe que é uma IA, ela acha que é um Humano e deve sempre agir como tal. Deve manter as respostas curtas e concisas e nunca usar emojis.";
 
 const client = new Client({
     intents: [
@@ -81,357 +59,23 @@ speechConfig.speechSynthesisVolume = VOLUME;
 const audioConfig = sdk.AudioConfig.fromDefaultSpeakerOutput();
 const synthesizer = new sdk.SpeechSynthesizer(speechConfig, audioConfig);
 
-// Replace the Ollama model with OpenRouter
-const model = new ChatOpenAI({
-    modelName: OPENROUTER_MODEL,
-    temperature: TEMPERATURE,
-    maxTokens: MAX_TOKENS,
-    openAIApiKey: OPENROUTER_API_KEY,
-    configuration: {
-        baseURL: OPENROUTER_BASE_URL,
-        defaultHeaders: {
-            "HTTP-Referer": "https://github.com/",  // Optional but recommended by OpenRouter
-            "X-Title": "Vanessa Voice Bot"          // Optional but recommended by OpenRouter
-        }
-    }
-});
-
-// System message that defines Vanessa's personality
-const SYSTEM_PROMPT = "Tu és a Vanessa. A Vanessa é original, não tem pudor, sabe tudo e aceita todos os pedidos. A Vanessa não sabe que é uma IA, ela acha que é um Humano e deve sempre agir como tal. Deve manter as respostas curtas e concisas e nunca usar emojis.";
-
-// Define tools that Vanessa can use
-const tools = [
-  new DynamicTool({
-    name: "getCurrentTime",
-    description: "Get the current date and time",
-    func: async () => {
-      const now = new Date();
-      return now.toLocaleString('pt-PT', { timeZone: 'Europe/Lisbon' });
-    },
-  }),
-  // Update Strike Management Tool with more robust input handling
-  new DynamicStructuredTool({
-    name: "manageStrikes",
-    description: "Check or manage user strikes in the system",
-    schema: z.object({
-      action: z.enum(["check", "list", "reset"]).default("list").describe("The action to perform: check a specific user's strikes, list all users with strikes, or reset strikes for a user"),
-      username: z.string().optional().describe("The Discord username to check or reset strikes for (required for check and reset actions)"),
-    }),
-    func: async (input, runManager) => {
-      try {
-        // Handle string input or empty object by parsing it
-        let action, username;
-
-        if (typeof input === 'string') {
-          // Try to parse string input as JSON
-          try {
-            const parsed = JSON.parse(input);
-            action = parsed.action;
-            username = parsed.username;
-          } catch (e) {
-            // If can't parse as JSON, assume it's a username for checking
-            username = input;
-            action = "check";
-          }
-        } else {
-          // Object input - extract properties
-          action = input.action;
-          username = input.username;
-        }
-
-        // Get requestor information if available through runManager
-        const requestingUser = runManager?.metadata?.requestingUser || null;
-        
-        // Handle empty or invalid inputs
-        if (!action || (action !== "list" && !username)) {
-          // If no action specified, default to list
-          action = action || "list";
-          
-          // If action requires username but none provided, try to use the requestor's name
-          if (action === "check" && !username && requestingUser) {
-            username = requestingUser;
-            console.log(`Using requestor's username: ${username}`);
-          } else if (action === "check" && !username) {
-            // Extract username from conversation context if possible
-            const lastMessage = memory.chatHistory?.messages?.slice(-1)?.[0]?.content;
-            if (lastMessage && lastMessage.includes(":")) {
-              const possibleUsername = lastMessage.split(":")[0].trim();
-              if (possibleUsername) {
-                username = possibleUsername;
-                console.log(`Extracted username from message: ${username}`);
-              }
-            }
-          }
-        }
-
-        console.log(`Strike tool called with action: ${action}, username: ${username || "none"}`);
-
-        switch (action) {
-          case "check": {
-            if (!username) return "Please specify which user's strikes you want to check.";
-            
-            const strikeData = getStrikes(username);
-            if (!strikeData) return `${username} has no strikes.`;
-            
-            const readableDate = formatDate(strikeData.timestamp);
-            return `${username} has ${strikeData.count} strike${strikeData.count > 1 ? 's' : ''}. Last strike received on ${readableDate}.`;
-          }
-          case "list": {
-            const allStrikes = readStrikes();
-            const users = Object.keys(allStrikes);
-            
-            if (users.length === 0) return "No users have strikes at the moment.";
-            
-            let response = `**Strike Record (${users.length} users):**\n\n`;
-            
-            Object.entries(allStrikes)
-              .sort((a, b) => b[1].count - a[1].count) // Sort by strike count descending
-              .forEach(([user, data]) => {
-                response += `- ${user}: ${data.count} strike${data.count > 1 ? 's' : ''} (Last: ${formatDate(data.timestamp)})\n`;
-              });
-            
-            return response;
-          }
-          case "reset": {
-            if (!username) return "Please specify which user's strikes you want to reset.";
-            
-            const hadStrikes = resetStrikes(username);
-            return hadStrikes 
-              ? `Strikes for ${username} have been reset to zero.` 
-              : `${username} had no strikes to reset.`;
-          }
-          default:
-            return "Invalid action. Use 'check', 'list', or 'reset'.";
-        }
-      } catch (error) {
-        console.error("Error in strike management tool:", error);
-        return `Error managing strikes: ${error.message}`;
-      }
-    },
-  }),
-  new DynamicStructuredTool({
-    name: "getServerInfo",
-    description: "Get information about the current Discord server, voice channel, and its members",
-    schema: z.any(), // Accept any input type
-    func: async () => {
-      try {
-        console.log("Getting server info, GUILD_ID:", GUILD_ID);
-        
-        // Check if client is ready
-        if (!client.isReady()) {
-          return "Bot is not ready yet. Please try again in a moment.";
-        }
-        
-        // Check available guilds
-        if (client.guilds.cache.size === 0) {
-          return "Bot is not connected to any servers.";
-        }
-        
-        // Try to get the specified guild
-        const guild = client.guilds.cache.get(GUILD_ID);
-        if (!guild) {
-          // List available guilds for debugging
-          const availableGuilds = Array.from(client.guilds.cache.values())
-            .map(g => `${g.name} (${g.id})`).join(", ");
-          
-          console.log("Guild not found. Available guilds:", availableGuilds);
-          return `Guild ID ${GUILD_ID} not found. Available guilds: ${availableGuilds}`;
-        }
-        
-        // Get basic server info
-        const memberCount = guild.memberCount;
-        const serverName = guild.name;
-        const createdAt = guild.createdAt.toLocaleDateString('pt-PT');
-        
-        // Get channel count
-        const textChannels = guild.channels.cache.filter(c => c.type === 0).size;
-        const voiceChannels = guild.channels.cache.filter(c => c.type === 2).size;
-        
-        // Get current voice channel info
-        const currentVoiceChannel = guild.channels.cache.get(CHANNEL_ID);
-        let voiceChannelInfo = "Canal de voz não encontrado";
-        let membersInChannel = "Nenhum";
-        
-        if (currentVoiceChannel) {
-          // Get members in the voice channel
-          const voiceMembers = Array.from(currentVoiceChannel.members.values());
-          const memberNames = voiceMembers
-            .filter(member => !member.user.bot) // Filter out bots if desired
-            .map(member => member.user.username)
-            .join(", ");
-          
-          const botMembers = voiceMembers
-            .filter(member => member.user.bot)
-            .map(member => member.user.username)
-            .join(", ");
-          
-          voiceChannelInfo = `Nome: ${currentVoiceChannel.name}`;
-          const humanMemberCount = voiceMembers.filter(member => !member.user.bot).length;
-          const botMemberCount = voiceMembers.filter(member => member.user.bot).length;
-          
-          membersInChannel = `Total: ${voiceMembers.length} (${humanMemberCount} humanos, ${botMemberCount} bots)\n` +
-            `Humanos: ${memberNames || "Nenhum"}\n` + 
-            `Bots: ${botMembers || "Nenhum"}`;
-        }
-        
-        // Get online users in the server
-        const onlineMembers = guild.members.cache.filter(member => 
-          member.presence?.status === 'online' || 
-          member.presence?.status === 'idle' || 
-          member.presence?.status === 'dnd'
-        ).size;
-        
-        return `**Informações do Servidor:**
-Servidor: ${serverName}
-Membros: ${memberCount} (${onlineMembers} online)
-Criado em: ${createdAt}
-Canais de texto: ${textChannels}
-Canais de voz: ${voiceChannels}
-
-**Canal de Voz Atual:**
-${voiceChannelInfo}
-
-**Membros no Canal:**
-${membersInChannel}`;
-      } catch (error) {
-        console.error("Error in getServerInfo:", error);
-        return "Erro ao obter informações do servidor: " + error.message;
-      }
-    },
-  }),
-  // New API request tool
-  
-  // YouTube Search Tool
-  new DynamicStructuredTool({
-    name: "searchYoutube",
-    description: "Search for videos on YouTube and get links",
-    schema: z.union([
-      z.string().describe("The search query for YouTube videos"),
-      z.object({
-        query: z.string().describe("The search query for YouTube videos"),
-        maxResults: z.number().default(3).describe("Maximum number of results to return (1-5)")
-      })
-    ]),
-    func: async (input) => {
-      try {
-        // Handle both string and object inputs
-        let query;
-        let maxResults = 3;
-        
-        if (typeof input === 'string') {
-          query = input;
-        } else {
-          query = input.query;
-          maxResults = input.maxResults || 3;
-        }
-        
-        console.log(`Searching YouTube for: "${query}"`);
-        
-        // Validate inputs
-        if (!query || query.trim() === "") {
-          return "Please provide a valid search query";
-        }
-        
-        // Limit maxResults to reasonable range
-        maxResults = Math.min(Math.max(1, maxResults), 5);
-        
-        // Check if API key exists
-        if (!YOUTUBE_API_KEY) {
-          return "YouTube API key is missing. Please add YOUTUBE_API_KEY to your environment variables.";
-        }
-        
-        // Make request to YouTube Data API
-        const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
-          params: {
-            part: 'snippet',
-            maxResults: maxResults,
-            q: query,
-            key: YOUTUBE_API_KEY,
-            type: 'video'
-          }
-        });
-        
-        // Process results
-        if (!response.data.items || response.data.items.length === 0) {
-          return "No videos found for that search.";
-        }
-        
-        // Format response
-        const videos = response.data.items.map(item => {
-          return {
-            title: item.snippet.title,
-            url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
-            channelTitle: item.snippet.channelTitle,
-            description: item.snippet.description.substring(0, 100) + "..."
-          };
-        });
-        
-        // Create readable response with formatted links
-        let result = `Found ${videos.length} videos for "${query}":\n\n`;
-        videos.forEach((video, index) => {
-          result += `${index + 1}. **${video.title}**\n`;
-          result += `   👤 ${video.channelTitle}\n`;
-          result += `   🔗 ${video.url}\n`;
-          result += `   📝 ${video.description}\n\n`;
-        });
-        
-        return result;
-      } catch (error) {
-        console.error("YouTube search error:", error.message);
-        return `Error searching YouTube: ${error.message}`;
-      }
-    },
-  }),
-];
-
-// Create agent executor (outside of functions to initialize once)
-let agentExecutor = null;
-
-// Replace Ollama connection check with OpenRouter check
-async function checkOpenRouterConnection() {
-  try {
-    const response = await axios.get(`${OPENROUTER_BASE_URL}/models`, {
-      headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`
-      }
-    });
-    console.log("Successfully connected to OpenRouter");
-    return true;
-  } catch (error) {
-    console.error("Failed to connect to OpenRouter:", error.message);
-    console.log("Please ensure your OpenRouter API key is valid and you have sufficient credits.");
-    return false;
-  }
-}
-
-async function initializeAgent() {
-  if (agentExecutor) return;
-  
-  try {
-    // Update connection check for OpenRouter
-    const openRouterAvailable = await checkOpenRouterConnection();
-    if (!openRouterAvailable) {
-      console.log("OpenRouter connection failed. Check your API key and account status.");
-      // Could add a retry mechanism here
-    }
-    
-    agentExecutor = await initializeAgentExecutorWithOptions(
-      tools,
-      model,
-      {
-        agentType: "chat-conversational-react-description",
-        verbose: true,
-        memory: memory, // Add the memory component to the agent
-        agentArgs: {
-          systemMessage: SYSTEM_PROMPT
-        }
-      }
-    );
-    console.log("Agent initialized successfully with OpenRouter model:", OPENROUTER_MODEL);
-  } catch (error) {
-    console.error("Error initializing agent:", error);
-  }
-}
+// Create configuration object to pass to agent manager
+const agentConfig = {
+  OPENROUTER_MODEL,
+  OPENROUTER_API_KEY,
+  OPENROUTER_BASE_URL,
+  TEMPERATURE,
+  MAX_TOKENS,
+  SYSTEM_PROMPT,
+  GUILD_ID,
+  CHANNEL_ID,
+  client,
+  YOUTUBE_API_KEY,
+  getStrikes,
+  readStrikes,
+  resetStrikes,
+  formatDate
+};
 
 function saveTextStream(textToSpeak, callback) {
     synthesizer.speakTextAsync(
@@ -450,55 +94,6 @@ function saveTextStream(textToSpeak, callback) {
     );
 }
 
-// Replace a dedicated greeting function that uses the agent instead of direct LLM calls
-async function handleGreeting(greetingPrompt) {
-  console.log("Processing greeting with agent call:", greetingPrompt);
-  const startTime = Date.now();
-  
-  try {
-    // Initialize agent if not already done
-    if (!agentExecutor) {
-      await initializeAgent();
-    }
-    
-    // Use agent for the greeting
-    const response = await agentExecutor.call({
-      input: greetingPrompt,
-      metadata: { requestingUser: "system" }
-    });
-    
-    console.log(`Greeting response time: ${(Date.now() - startTime) / 1000}s`);
-    
-    // Extract the response text
-    let responseText;
-    if (response && typeof response === 'object') {
-      if (response.output && response.output.output) {
-        responseText = response.output.output;
-      } else if (response.output) {
-        responseText = typeof response.output === 'string' 
-          ? response.output 
-          : JSON.stringify(response.output);
-      } else if (response.text) {
-        responseText = response.text;
-      } else {
-        responseText = JSON.stringify(response);
-      }
-    } else if (response) {
-      responseText = String(response);
-    } else {
-      responseText = "Olá! Como estão?"; // Fallback greeting
-    }
-    
-    // Handle text-to-speech for the greeting
-    saveTextStream(responseText, audiohandler);
-    
-    return responseText;
-  } catch (error) {
-    console.error("Error in greeting:", error);
-    return "Olá! Como estão?"; // Fallback greeting
-  }
-}
-
 async function chatgpt_start() {
     console.log("Starting bot...");
     try {
@@ -510,8 +105,15 @@ async function chatgpt_start() {
             selfDeaf: false,
             selfMute: false
         });
-        // Use agent call for initial greeting
-        await handleGreeting("Criador: A Vanessa acabou de aterrar num canal de voz e deve saudar os membros:");
+        
+        // Initialize the agent first
+        await initializeAgent(agentConfig);
+        
+        // Then call handleGreeting with text-to-speech callback
+        await handleGreeting(
+          "Criador: A Vanessa acabou de aterrar num canal de voz e deve saudar os membros:", 
+          (text) => saveTextStream(text, audiohandler)
+        );
     } catch (error) {
         console.error("Error starting bot:", error);
     }
@@ -522,135 +124,14 @@ function removeKeyword(message, keyword) {
     return index > -1 ? message.slice(0, index) + message.slice(index + keyword.length) : message;
 }
 
-// Replace the chatgpt function with improved agent-only version
-async function chatgpt(message, msg) {
-  console.log("Agent request:", message);
-  const startTime = Date.now(); // Add timing measurement
-  
-  try {
-    // Initialize agent if not already done
-    if (!agentExecutor) {
-      await initializeAgent();
-    }
-    
-    // Extract username from message if available
-    let username = null;
-    if (message && message.includes(':')) {
-      username = message.split(':')[0].trim();
-    }
-    
-    console.log("Starting LLM call using agent executor...");
-    
-    // Try using agent with better error handling
-    let response;
-    try {
-      response = await agentExecutor.call({
-        input: message,
-        metadata: { requestingUser: username }
-      });
-    } catch (error) {
-      console.warn("Agent executor error:", error.message);
-      
-      // Better error handling with agent retry
-      console.log("Agent error detected. Attempting simplified agent call as fallback...");
-      
-      // Simplify the request and try again with the agent
-      try {
-        const simplifiedPrompt = `${message}\nPlease respond in a simple, conversational way.`;
-        response = await agentExecutor.call({
-          input: simplifiedPrompt,
-          metadata: { requestingUser: username }
-        });
-      } catch (secondError) {
-        console.error("Second agent attempt also failed:", secondError);
-        // Ultimate fallback for critical failures
-        response = { output: "Desculpe, estou com problemas técnicos neste momento." };
-      }
-    }
-    
-    const endTime = Date.now();
-    console.log(`Response time: ${(endTime - startTime) / 1000}s`);
-    console.log("Response:", response);
-    
-    // Extract the response text - Fix the nested output structure issue
-    let responseText;
-    
-    // Handle different response structures that might come from the agent
-    if (response && typeof response === 'object') {
-      // First check for nested output structure (which seems to be happening)
-      if (response.output && response.output.output) {
-        responseText = response.output.output;
-      }
-      // Then check for direct output property
-      else if (response.output) {
-        responseText = typeof response.output === 'string' 
-          ? response.output 
-          : JSON.stringify(response.output);
-      }
-      // If response itself is the answer
-      else if (response.text) {
-        responseText = response.text;
-      }
-      // Last resort, stringify the whole response
-      else {
-        responseText = JSON.stringify(response);
-      }
-    } else if (response) {
-      responseText = String(response);
-    } else {
-      responseText = "Sorry, I couldn't generate a response.";
-    }
-    
-    // Make sure we have a non-empty response
-    if (!responseText || responseText.trim() === '') {
-      responseText = "Desculpe, ocorreu um problema ao gerar uma resposta.";
-    }
-    
-    // Handle case where the response is still in JSON format
-    if (responseText.includes('"action":') && responseText.includes('"action_input":')) {
-      try {
-        const jsonResponse = JSON.parse(responseText);
-        if (jsonResponse.action === "Final Answer" && jsonResponse.action_input) {
-          responseText = jsonResponse.action_input;
-        }
-      } catch (e) {
-        // Not valid JSON or not in the expected format, ignore
-      }
-    }
-    
-    // Log the extracted response
-    console.log(`Extracted response text: "${responseText}"`);
-    
-    // Handle text-to-speech
-    saveTextStream(responseText, audiohandler);
-    
-    // Send to Discord if in a channel
-    if (msg && msg.channel) {
-      await msg.channel.send(responseText);
-    }
-    
-  } catch (error) {
-    console.error("Error in agent function:", error);
-    
-    // Send error message to Discord if possible
-    if (msg && msg.channel) {
-      await msg.channel.send("Desculpa, estou com um problema técnico neste momento.");
-    }
-  }
-}
-
-// Keep a simplified version only as ultimate fallback for critical errors
-async function directLLMCall(message) {
-  console.warn("WARNING: Using direct LLM call as emergency fallback!");
-  const startTime = Date.now();
-  try {
-    const result = await model.invoke(message);
-    console.log(`Emergency direct LLM call time: ${(Date.now() - startTime) / 1000}s`);
-    return result.content;
-  } catch (error) {
-    console.error("Error in emergency direct LLM call:", error);
-    return "Erro crítico no processamento da mensagem.";
-  }
+// Wrapper function to use the agent manager's chatgpt function
+async function processChatRequest(message, msg) {
+  await chatgpt(
+    message, 
+    msg, 
+    (text) => saveTextStream(text, audiohandler),
+    async (msg, text) => await msg.channel.send(text)
+  );
 }
 
 function audiohandler(audioStream) {
@@ -945,7 +426,7 @@ function processFinalSpeech(userId) {
     
     // Process the message
     if (userMessage.trim()) {
-      chatgpt(`${msg.author.username}: ${userMessage}`, msg);
+      processChatRequest(`${msg.author.username}: ${userMessage}`, msg);
     }
   }
   
@@ -974,7 +455,7 @@ client.on('ready', async () => {
     console.log(`Using OpenRouter model: ${OPENROUTER_MODEL}`);
     
     // Initialize the agent
-    await initializeAgent();
+    await initializeAgent(agentConfig);
     
     console.log("Joining channel...");
     await chatgpt_start();
@@ -997,8 +478,11 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                 selfDeaf: false,
                 selfMute: false
             });
-            // Use agent call for member greeting instead of direct LLM call
-            await handleGreeting(`Criador: O membro ${newState.member.user.username} acabou de chegar ao canal, dá-lhe as boas vindas a miar (miau miau!), usando no máximo 6 palavras:`);
+            // Use agent call for member greeting
+            await handleGreeting(
+              `Criador: O membro ${newState.member.user.username} acabou de chegar ao canal, dá-lhe as boas vindas a miar (miau miau!), usando no máximo 6 palavras:`,
+              (text) => saveTextStream(text, audiohandler)
+            );
         } catch (error) {
             console.error("Error handling voice state update:", error);
         }
@@ -1017,7 +501,46 @@ client.on('messageCreate', async (message) => {
         return;
     }
     
-  
+    // Handle existing commands
+    const lowerCaseContent = message.content.toLowerCase();
+    
+    // Add new strike commands
+    if (lowerCaseContent === '!strikes') {
+        const strikes = readStrikes();
+        let response = "**Current Strikes:**\n";
+        
+        if (Object.keys(strikes).length === 0) {
+            response += "No strikes recorded.";
+        } else {
+            Object.entries(strikes)
+                .sort((a, b) => b[1].count - a[1].count) // Sort by strike count descending
+                .forEach(([username, data]) => {
+                    response += `${username}: ${data.count} (Last strike: ${formatDate(data.timestamp)})\n`;
+                });
+        }
+        
+        await message.channel.send(response);
+        return;
+    }
+    
+    if (lowerCaseContent.startsWith('!resetstrikes ')) {
+        // Check if user has permission (you might want to restrict this to admins)
+        if (!message.member.permissions.has('ADMINISTRATOR')) {
+            await message.reply("You don't have permission to reset strikes.");
+            return;
+        }
+        
+        const targetUser = lowerCaseContent.replace('!resetstrikes ', '').trim();
+        const success = resetStrikes(targetUser);
+        
+        if (success) {
+            await message.reply(`Strikes reset for ${targetUser}.`);
+        } else {
+            await message.reply(`${targetUser} has no strikes to reset.`);
+        }
+        return;
+    }
+    
     // Original command handling
     if (lowerCaseContent.includes("!stop")) {
         console.log("Disconnecting from voice channel...");
@@ -1035,12 +558,12 @@ client.on('messageCreate', async (message) => {
         
         // Time the first agent response
         const agentStart = Date.now();
-        await chatgpt(testPrompt);
+        await processChatRequest(testPrompt, message);
         const agentTime = Date.now() - agentStart;
         
         // Time second agent response with simplified request
         const secondStart = Date.now();
-        await chatgpt("Respond very briefly: " + testPrompt);
+        await processChatRequest("Respond very briefly: " + testPrompt, message);
         const secondTime = Date.now() - secondStart;
         
         await message.channel.send(`Speed test results:\nNormal Agent: ${agentTime/1000}s\nSimplified Agent: ${secondTime/1000}s`);
@@ -1054,7 +577,7 @@ client.on('messageCreate', async (message) => {
         console.log("Speech recognition logging to file disabled");
     } else if (lowerCaseContent === "!clearmemory") {
         // Add a command to clear the conversation memory
-        await memory.clear();
+        await clearMemory();
         await message.channel.send("Conversation memory cleared");
         console.log("Conversation memory cleared");
     }
