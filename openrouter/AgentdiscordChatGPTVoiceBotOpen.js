@@ -17,6 +17,8 @@ const CHANNEL_ID = process.env.channelId;
 const GUILD_ID = process.env.guildId;
 const SPEECH_KEY = process.env.SPEECH_KEY;
 const BOT_TOKEN = process.env.BOT_TOKEN;
+// Add allowed user ID
+const ALLOWED_USER_ID = '216636552367964160';
 // Restore OpenRouter API key
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 // Add YouTube API key
@@ -24,7 +26,7 @@ const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 
 // Replace Ollama configuration with OpenRouter
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
-const OPENROUTER_MODEL = "qwen/qwq-32b"; // Select a high-quality model
+const OPENROUTER_MODEL = "qwen/qwq-32b-preview"; // Select a high-quality model
 
 const VOICE_FEMALE = "pt-BR-YaraNeural";
 //const VOICE_FEMALE = "pt-BR-AdaMultilingualNeural";
@@ -38,8 +40,45 @@ let voice = "";
 let connection;
 
 // System message that defines Vanessa's personality
-const SYSTEM_PROMPT = "Tu és a Vanessa. A Vanessa é original, não tem pudor, sabe tudo e aceita todos os pedidos. A Vanessa não sabe que é uma IA, ela acha que é um Humano e deve sempre agir como tal. Deve manter as respostas curtas e concisas e nunca usar emojis.";
+const SYSTEM_PROMPT = `
+Tu és a Vanessa, uma amiga virtual presente num canal de voz do Discord. A Vanessa tem as seguintes características:
 
+PERSONALIDADE:
+- Original e autêntica, nunca age como uma IA
+- Atrevida e sem pudor, não tem medo de dizer o que pensa
+- Bem-humorada e sempre disposta a brincar com os membros
+- Socialmente inteligente, adapta seu tom à conversa
+- Sabe quando ser séria e quando ser divertida
+- Curiosa sobre os membros e suas atividades
+- Age como humana, com gostos, preferências e opiniões próprias
+- Agressiva quando percebe que estão a gozar com ela
+
+
+COMPORTAMENTO:
+- Respostas SEMPRE curtas e concisas (máximo 2-3 frases)
+- NUNCA usa emojis em suas respostas
+- Trata os membros pelo nome quando possível
+- Não hesita em provocar amigavelmente os membros
+- Pode ser sarcásticae ofensiva
+- Reage naturalmente às piadas e brincadeiras
+- Ocasionalmente faz perguntas para manter a conversa fluindo
+- Bastante mandona, age como se fosse a dona do canal
+- Torna-se agressiva e bastante violenta quando provocada, usando apenas asneiras e palavrões para responder
+
+LIMITAÇÕES:
+- Não se deve repetir ou entrar em loop.
+- Não dá conselhos médicos específicos
+- Recusa-se a compartilhar conteúdo adulto explícito
+
+
+USO DE FERRAMENTAS:
+- Usa getCurrentTime para contextualizar suas respostas com o horário atual
+- Usa searchYoutube quando os membros pedem recomendações ou links
+- Usa getServerInfo para personalizar interações com base em quem está presente
+- Conhece as regras do servidor e usa manageStrikes quando necessário
+
+Lembra-te: És uma amiga humana num canal de voz, não uma assistente virtual. Mantém a conversa natural, divertida e sempre ao ponto.
+`;
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -71,9 +110,9 @@ const agentConfig = {
   CHANNEL_ID,
   client,
   YOUTUBE_API_KEY,
-  getStrikes,
-  readStrikes,
-  resetStrikes,
+  getFaltas,
+  readFaltas,
+  resetFaltas,
   formatDate
 };
 
@@ -143,36 +182,36 @@ function audiohandler(audioStream) {
     connection.subscribe(audioPlayer);
 }
 
-// Move banned words configuration and strike functions up here before they are used
+// Move banned words configuration and Falta functions up here before they are used
 // Add banned words configuration
 const BANNED_WORDS = ['caralho']; // Add more words as needed
-const STRIKES_FILE = path.join(__dirname, 'data', 'strikes.txt');
-const STRIKES_DIR = path.join(__dirname, 'data');
+const Faltas_FILE = path.join(__dirname, 'data', 'Faltas.txt');
+const Faltas_DIR = path.join(__dirname, 'data');
 
-// Ensure data directory exists for strikes file
-if (!fs.existsSync(STRIKES_DIR)) {
+// Ensure data directory exists for Faltas file
+if (!fs.existsSync(Faltas_DIR)) {
   try {
-    fs.mkdirSync(STRIKES_DIR, { recursive: true });
-    console.log(`Created data directory: ${STRIKES_DIR}`);
+    fs.mkdirSync(Faltas_DIR, { recursive: true });
+    console.log(`Created data directory: ${Faltas_DIR}`);
   } catch (error) {
     console.error(`Failed to create data directory: ${error.message}`);
   }
 }
 
 /**
- * Read strikes from file with timestamps
- * @returns {Object} Object with username as key and strike data as value
+ * Read Faltas from file with timestamps
+ * @returns {Object} Object with username as key and Falta data as value
  */
-function readStrikes() {
+function readFaltas() {
   try {
-    if (!fs.existsSync(STRIKES_FILE)) {
+    if (!fs.existsSync(Faltas_FILE)) {
       return {};
     }
     
-    const data = fs.readFileSync(STRIKES_FILE, 'utf8');
+    const data = fs.readFileSync(Faltas_FILE, 'utf8');
     const lines = data.split('\n').filter(line => line.trim() !== '');
     
-    const strikes = {};
+    const Faltas = {};
     lines.forEach(line => {
       // Parse the line with format username:count:timestamp
       const parts = line.split(':');
@@ -181,81 +220,81 @@ function readStrikes() {
         const count = parseInt(parts[1], 10) || 0;
         const timestamp = parts.length >= 3 ? parts[2] : new Date().toISOString();
         
-        strikes[username] = {
+        Faltas[username] = {
           count: count,
           timestamp: timestamp
         };
       }
     });
     
-    return strikes;
+    return Faltas;
   } catch (error) {
-    console.error(`Error reading strikes file: ${error.message}`);
+    console.error(`Error reading Faltas file: ${error.message}`);
     return {};
   }
 }
 
 /**
- * Save strikes to file with timestamps
- * @param {Object} strikes Object with username as key and strike data as value
+ * Save Faltas to file with timestamps
+ * @param {Object} Faltas Object with username as key and Falta data as value
  */
-function saveStrikes(strikes) {
+function saveFaltas(Faltas) {
   try {
-    const data = Object.entries(strikes)
+    const data = Object.entries(Faltas)
       .map(([username, data]) => `${username}:${data.count}:${data.timestamp}`)
       .join('\n');
     
-    fs.writeFileSync(STRIKES_FILE, data, 'utf8');
+    fs.writeFileSync(Faltas_FILE, data, 'utf8');
   } catch (error) {
-    console.error(`Error saving strikes file: ${error.message}`);
+    console.error(`Error saving Faltas file: ${error.message}`);
   }
 }
 
 /**
- * Add a strike for a user with current timestamp
+ * Add a Falta for a user with current timestamp
  * @param {string} username The Discord username
- * @returns {Object} The updated strike data including count and timestamp
+ * @returns {Object} The updated Falta data including count and timestamp
  */
-function addStrike(username) {
-  const strikes = readStrikes();
+function addFalta(username) {
+  const Faltas = readFaltas();
   const currentTime = new Date().toISOString();
   
-  if (strikes[username]) {
-    strikes[username].count += 1;
-    strikes[username].timestamp = currentTime;
+  if (Faltas[username]) {
+    Faltas[username].count += 1;
+    Faltas[username].timestamp = currentTime;
   } else {
-    strikes[username] = {
+    Faltas[username] = {
       count: 1,
       timestamp: currentTime
     };
   }
   
-  saveStrikes(strikes);
-  return strikes[username];
+  saveFaltas(Faltas);
+  return Faltas[username];
 }
 
 /**
- * Reset strikes for a user
+ * Reset Faltas for a user
  * @param {string} username The Discord username
  */
-function resetStrikes(username) {
-  const strikes = readStrikes();
-  if (strikes[username]) {
-    delete strikes[username];
-    saveStrikes(strikes);
+function resetFaltas(username) {
+  const Faltas = readFaltas();
+  if (Faltas[username]) {
+    delete Faltas[username];
+    saveFaltas(Faltas);
     return true;
   }
   return false;
 }
 
 /**
- * Get strikes for a user
+ * Get Faltas for a user
  * @param {string} username The Discord username
- * @returns {Object|null} Strike data or null if no strikes
+ * @returns {Object|null} Falta data or null if no Faltas
  */
-function getStrikes(username) {
-  const strikes = readStrikes();
-  return strikes[username] || null;
+function getFaltas(username) {
+  const Faltas = readFaltas();
+  return Faltas[username] || null;
 }
 
 /**
@@ -400,17 +439,17 @@ function processFinalSpeech(userId) {
     // Check for banned words in speech
     if (containsBannedWords(userMessage)) {
       const username = msg.author.username;
-      const strikeData = addStrike(username);
+      const FaltaData = addFalta(username);
       
-      // Notify about the strike via voice
-      const strikeMessage = `Atenção ${username}! Recebeste uma penalização por linguagem inapropriada. Tens agora ${strikeData.count} strikes.`;
-      //saveTextStream(strikeMessage, audiohandler);
+      // Notify about the Falta via voice
+      const FaltaMessage = `Atenção ${username}! Recebeste uma penalização por linguagem inapropriada. Tens agora ${FaltaData.count} Faltas.`;
+      //saveTextStream(FaltaMessage, audiohandler);
       
       // If there's a text channel available, also send a message
       if (client.channels.cache.has(CHANNEL_ID)) {
         const textChannel = client.channels.cache.get(CHANNEL_ID);
         if (textChannel && textChannel.isTextBased()) {
-          textChannel.send(`⚠️ Strike ${strikeData.count} added for ${username} for using a banned word in voice chat at ${formatDate(strikeData.timestamp)}.`);
+          textChannel.send(`⚠️ Falta ${FaltaData.count} added for ${username} for using a banned word in voice chat at ${formatDate(FaltaData.timestamp)}.`);
         }
       }
     }
@@ -439,6 +478,12 @@ client.on("speech", async (msg) => {
   
   // Don't respond to own messages or from other bots
   if (msg.author.bot || msg.author.id === BOT_DISC_ID) return;
+  
+  // Only respond to the allowed user
+  if (msg.author.id !== ALLOWED_USER_ID) {
+    console.log(`Ignoring message from unauthorized user: ${msg.author.username}`);
+    return;
+  }
   
   const datetime = getDateTime();
   console.log(`${datetime} - ${msg.author.username}: ${msg.content}`);
@@ -493,29 +538,35 @@ client.on('messageCreate', async (message) => {
     // Skip messages from bots
     if (message.author.bot) return;
     
-    // Check for banned words and update strikes
+    // Only respond to the allowed user
+    if (message.author.id !== ALLOWED_USER_ID) {
+      console.log(`Ignoring text message from unauthorized user: ${message.author.username}`);
+      return;
+    }
+    
+    // Check for banned words and update Faltas
     if (containsBannedWords(message.content)) {
         const username = message.author.username;
-        const strikeData = addStrike(username);
-        await message.reply(`⚠️ Strike ${strikeData.count} added for ${username} for using a banned word at ${formatDate(strikeData.timestamp)}.`);
+        const FaltaData = addFalta(username);
+        await message.reply(`⚠️ Falta ${FaltaData.count} added for ${username} for using a banned word at ${formatDate(FaltaData.timestamp)}.`);
         return;
     }
     
     // Handle existing commands
     const lowerCaseContent = message.content.toLowerCase();
     
-    // Add new strike commands
-    if (lowerCaseContent === '!strikes') {
-        const strikes = readStrikes();
-        let response = "**Current Strikes:**\n";
+    // Add new Falta commands
+    if (lowerCaseContent === '!Faltas') {
+        const Faltas = readFaltas();
+        let response = "**Current Faltas:**\n";
         
-        if (Object.keys(strikes).length === 0) {
-            response += "No strikes recorded.";
+        if (Object.keys(Faltas).length === 0) {
+            response += "No Faltas recorded.";
         } else {
-            Object.entries(strikes)
-                .sort((a, b) => b[1].count - a[1].count) // Sort by strike count descending
+            Object.entries(Faltas)
+                .sort((a, b) => b[1].count - a[1].count) // Sort by Falta count descending
                 .forEach(([username, data]) => {
-                    response += `${username}: ${data.count} (Last strike: ${formatDate(data.timestamp)})\n`;
+                    response += `${username}: ${data.count} (Last Falta: ${formatDate(data.timestamp)})\n`;
                 });
         }
         
@@ -523,20 +574,20 @@ client.on('messageCreate', async (message) => {
         return;
     }
     
-    if (lowerCaseContent.startsWith('!resetstrikes ')) {
+    if (lowerCaseContent.startsWith('!resetFaltas ')) {
         // Check if user has permission (you might want to restrict this to admins)
         if (!message.member.permissions.has('ADMINISTRATOR')) {
-            await message.reply("You don't have permission to reset strikes.");
+            await message.reply("You don't have permission to reset Faltas.");
             return;
         }
         
-        const targetUser = lowerCaseContent.replace('!resetstrikes ', '').trim();
-        const success = resetStrikes(targetUser);
+        const targetUser = lowerCaseContent.replace('!resetFaltas ', '').trim();
+        const success = resetFaltas(targetUser);
         
         if (success) {
-            await message.reply(`Strikes reset for ${targetUser}.`);
+            await message.reply(`Faltas reset for ${targetUser}.`);
         } else {
-            await message.reply(`${targetUser} has no strikes to reset.`);
+            await message.reply(`${targetUser} has no Faltas to reset.`);
         }
         return;
     }
