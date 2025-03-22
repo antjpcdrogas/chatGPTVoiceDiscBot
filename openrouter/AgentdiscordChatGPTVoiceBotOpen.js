@@ -419,6 +419,27 @@ function logSpeechRecognition(username, userId, message) {
   }
 }
 
+// Add a function to generate and deliver voice warnings using the agent
+async function deliverFaltaWarning(username, faltaCount) {
+  try {
+    const warningPrompt = `Criador: O usuário ${username} tem ${faltaCount} faltas, só falta 1 para ser banido. Dá-lhe um aviso sério e intimidante sobre o seu comportamento e avisa o que acontece se chegar a 5 faltas:`;
+    
+    // Use the agent to generate a personalized warning - this will be the ONLY response
+    const response = await chatgpt(
+      warningPrompt,
+      null, // No message object needed since we're not responding in chat
+      (text) => saveTextStream(text, audiohandler),
+      null  // No channel sending callback to ensure voice-only
+    );
+    
+    console.log(`Delivered voice warning to ${username} who has ${faltaCount} faltas.`);
+    return true;
+  } catch (error) {
+    console.error("Error delivering falta warning:", error);
+    return false;
+  }
+}
+
 function processFinalSpeech(userId) {
   if (!speechTimeouts[userId]) return;
   
@@ -441,17 +462,16 @@ function processFinalSpeech(userId) {
       const username = msg.author.username;
       const FaltaData = addFalta(username);
       
-      // Notify about the Falta via voice
-      const FaltaMessage = `Atenção ${username}! Recebeste uma penalização por linguagem inapropriada. Tens agora ${FaltaData.count} Faltas.`;
-      //saveTextStream(FaltaMessage, audiohandler);
-      
-      // If there's a text channel available, also send a message
-      if (client.channels.cache.has(CHANNEL_ID)) {
-        const textChannel = client.channels.cache.get(CHANNEL_ID);
-        if (textChannel && textChannel.isTextBased()) {
-          textChannel.send(`⚠️ Falta ${FaltaData.count} added for ${username} for using a banned word in voice chat at ${formatDate(FaltaData.timestamp)}.`);
-        }
+      // Check if user has reached 4 faltas - give agent's warning message only
+      if (FaltaData.count === 4) {
+        deliverFaltaWarning(username, FaltaData.count);
+        // Return early to avoid processing the original message
+        // Clean up before returning
+        delete speechTimeouts[userId];
+        return;
       }
+      // Removed the else block that was giving warnings for other falta counts
+      // No notification is given for faltas 1-3
     }
     
     // Remove character name if present
@@ -548,7 +568,16 @@ client.on('messageCreate', async (message) => {
     if (containsBannedWords(message.content)) {
         const username = message.author.username;
         const FaltaData = addFalta(username);
-        await message.reply(`⚠️ Falta ${FaltaData.count} added for ${username} for using a banned word at ${formatDate(FaltaData.timestamp)}.`);
+        
+        // Check if user has reached 4 faltas - give agent's warning message only
+        if (FaltaData.count === 4) {
+          // Only deliver the warning, don't respond to the original message
+          deliverFaltaWarning(username, FaltaData.count);
+          return;
+        }
+        // Removed the else block that was sending text messages for other falta counts
+        // No message is sent for faltas 1-3
+        
         return;
     }
     
